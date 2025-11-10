@@ -39251,37 +39251,77 @@ const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirect
 };
 
 const main = async () => {
+  console.log('Getting input build');
+  coreExports.debug('Getting input build');
   const buildPath = coreExports.getInput('build');
+  console.log('Got input build: ' + buildPath);
+  coreExports.debug('Got input build: ' + buildPath);
 
+  console.log('Getting input redirects');
+  coreExports.debug('Getting input redirects');
   const redirectsPath = coreExports.getInput('redirects');
+  console.log('Got input redirects: ' + redirectsPath);
+  coreExports.debug('Got input redirects: ' + redirectsPath);
+
+  console.log('Loading file redirects: ' + path.resolve(redirectsPath));
+  coreExports.debug('Loading file redirects: ' + path.resolve(redirectsPath));
   /**
    * @type {{location: string, pattern?: string, redirect: string}[]}
    */
   const redirects = JSON.parse(fs.readFileSync(redirectsPath, 'utf-8'));
 
+  console.log('Got redirects: ' + redirects.length);
+  coreExports.debug('Got redirects: ' + redirects.length);
+
+  console.log('Getting input bucket');
+  coreExports.debug('Getting input bucket');
   const bucket = coreExports.getInput('bucket');
+  console.log('Got input bucket: ' + bucket);
+  coreExports.debug('Got input bucket: ' + bucket);
+
+
   if (!/^[a-z0-9][a-z0-9\.-]{1,61}[a-z0-9]$/.test(bucket) ||
     /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
     /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
     /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
     /--x-s3$/.test(bucket) || /--table-s3$/.test(bucket)) {
+    console.error('Bucket was invalid');
+    coreExports.error('Bucket was invalid');
     return Promise.reject(`Invalid bucket name, got ${bucket}`);
   }
 
+  console.log('Getting input prefix');
+  coreExports.debug('Getting input prefix');
   const prefix = coreExports.getInput('prefix');
+  console.log('Got input prefix: ' + prefix);
+  coreExports.debug('Got input prefix: ' + prefix);
   if (!/^[a-z0-9\.-]+(\/[a-z0-9\.-]+)*$/.test(prefix)) {
+    console.error('Prefix was invalid');
+    coreExports.error('Prefix was invalid');
     return Promise.reject(`Invalid prefix, got ${prefix}`);
   }
 
+  console.log('Getting input parallel');
+  coreExports.debug('Getting input parallel');
   const parallel = parseInt(coreExports.getInput('parallel'), 10);
+  console.log('Got input parallel: ' + parallel);
+  coreExports.debug('Got input parallel: ' + parallel);
   if (Number.isNaN(parallel)) {
+    console.error('Parallel was invalid');
+    coreExports.error('Parallel was invalid');
     return Promise.reject(`Invalid integer value for parallel, got ${coreExports.getInput('parallel')}`);
   }
 
+  console.log('About to make redirects');
+  coreExports.debug('About to make redirects');
   await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
+  console.log('Finished making redirects');
+  coreExports.debug('Finished making redirects');
 };
 
 const run = async () => {
+  console.log('Starting run');
+  coreExports.debug('Starting run');
   try {
     await main();
   } catch (err) {
