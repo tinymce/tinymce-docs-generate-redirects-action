@@ -39278,13 +39278,18 @@ const main = async () => {
     return Promise.reject(`Invalid integer value for parallel, got ${coreExports.getInput('parallel')}`);
   }
 
-  makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
+  await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
 };
 
-
-main().catch((err) => {
-  coreExports.setFailed(err.message);
-});
+const run = async () => {
+  try {
+    await main();
+  } catch (err) {
+    if (err instanceof Error) {
+      coreExports.setFailed(err.message);
+    }
+  }
+};
 
 function httpRequest(options) {
     return new Promise((resolve, reject) => {
@@ -42687,4 +42692,6 @@ var index = /*#__PURE__*/Object.freeze({
 	getDefaultRoleAssumer: getDefaultRoleAssumer,
 	getDefaultRoleAssumerWithWebIdentity: getDefaultRoleAssumerWithWebIdentity
 });
+
+export { run };
 //# sourceMappingURL=index.js.map

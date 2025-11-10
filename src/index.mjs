@@ -261,10 +261,15 @@ const main = async () => {
     return Promise.reject(`Invalid integer value for parallel, got ${core.getInput('parallel')}`);
   }
 
-  makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
+  await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
 };
 
-
-main().catch((err) => {
-  core.setFailed(err.message);
-});
+export const run = async () => {
+  try {
+    await main();
+  } catch (err) {
+    if (err instanceof Error) {
+      core.setFailed(err.message);
+    }
+  }
+};
