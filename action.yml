@@ -2,6 +2,10 @@ name: TinyMCE Docs Generate Redirects
 description: Create s3 index.html objects that represent redirects with headers.
 
 inputs:
+  build:
+    description: Path to build directory that contains the original files
+    required: true
+
   redirects:
     description: Path or URL to JSON file containing redirects.
     required: true
