@@ -39048,6 +39048,7 @@ const checkS3ObjectExists = async (buildPath, _client, _bucket, _prefix, subPath
  * @returns {Promise<{ copied: boolean, subPath: string, error?: S3ServiceException}>}
  */
 const copyS3ObjectWithMetadataAsync = async (client, bucket, prefix, subPath, metadata) => {
+  const copied = true;
   const fullPath = `${prefix}/${subPath}`;
   const command = new CopyObjectCommand({
     Bucket: bucket,
