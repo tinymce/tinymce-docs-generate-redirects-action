@@ -7,7 +7,7 @@ import {
   S3ServiceException,
 } from "@aws-sdk/client-s3";
 
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /**
@@ -15,7 +15,7 @@ import path from 'node:path';
  */
 const checkS3ObjectExists = async (buildPath, _client, _bucket, _prefix, subPath) => {
   // it's too slow to talk to s3, so just check the local files we just uploaded...
-  return fs.existsSync(path.join(buildPath, subPath));
+  return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
 }
 
 /**
@@ -234,77 +234,61 @@ const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirect
 };
 
 const main = async () => {
-  console.log('Getting input build');
-  core.debug('Getting input build');
   const buildPath = core.getInput('build');
-  console.log('Got input build: ' + buildPath);
-  core.debug('Got input build: ' + buildPath);
+  core.debug(`Got input build "${buildPath}" which resolves to "${path.resolve(buildPath)}"`);
 
-  console.log('Getting input redirects');
-  core.debug('Getting input redirects');
-  const redirectsPath = core.getInput('redirects');
-  console.log('Got input redirects: ' + redirectsPath);
-  core.debug('Got input redirects: ' + redirectsPath);
+  const redirectsSource = core.getInput('redirects');
+  core.debug(`Got input redirects "${redirectsSource}"`);
 
-  console.log('Loading file redirects: ' + path.resolve(redirectsPath));
-  core.debug('Loading file redirects: ' + path.resolve(redirectsPath));
   /**
    * @type {{location: string, pattern?: string, redirect: string}[]}
    */
-  const redirects = JSON.parse(fs.readFileSync(redirectsPath, 'utf-8'));
+  const redirects = await (async () => {
+    if (redirectsSource.startsWith('https://')) {
+    const response = await fetch(redirectsSource);
+      if (!response.ok) {
+        throw new Error('Unable to fetch ' + redirectsSource);
+      }
+      return response.json();
+    } else {
+      return JSON.parse(await fs.readFile(redirectsSource, 'utf-8'));
+    }
+  })();
+  if (!(Array.isArray(redirects) && redirects.every((v) => (
+    typeof v === 'object' && typeof v.location === 'string' && 
+    typeof v.redirect === 'string' && 
+    (typeof v.pattern === 'undefined' || typeof v.pattern === 'string')
+  )))) {
+    throw new Error(`Invalid redirects data`);
+  }
 
-  console.log('Got redirects: ' + redirects.length);
-  core.debug('Got redirects: ' + redirects.length);
-
-  console.log('Getting input bucket');
-  core.debug('Getting input bucket');
   const bucket = core.getInput('bucket');
-  console.log('Got input bucket: ' + bucket);
-  core.debug('Got input bucket: ' + bucket);
-
-
+  core.debug(`Got input bucket "${bucket}"`);
   if (!/^[a-z0-9][a-z0-9\.-]{1,61}[a-z0-9]$/.test(bucket) ||
     /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
     /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
     /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
     /--x-s3$/.test(bucket) || /--table-s3$/.test(bucket)) {
-    console.error('Bucket was invalid');
-    core.error('Bucket was invalid');
-    return Promise.reject(`Invalid bucket name, got ${bucket}`);
+    throw new Error(`Invalid bucket name, got ${bucket}`);
   }
 
-  console.log('Getting input prefix');
-  core.debug('Getting input prefix');
   const prefix = core.getInput('prefix');
-  console.log('Got input prefix: ' + prefix);
-  core.debug('Got input prefix: ' + prefix);
+  core.debug(`Got input prefix "${prefix}"`);
   if (!/^[a-z0-9\.-]+(\/[a-z0-9\.-]+)*$/.test(prefix)) {
-    console.error('Prefix was invalid');
-    core.error('Prefix was invalid');
-    return Promise.reject(`Invalid prefix, got ${prefix}`);
+    throw new Error(`Invalid prefix, got ${prefix}`);
   }
 
-  console.log('Getting input parallel');
-  core.debug('Getting input parallel');
   const parallel = parseInt(core.getInput('parallel'), 10);
-  console.log('Got input parallel: ' + parallel);
-  core.debug('Got input parallel: ' + parallel);
+  core.debug(`Got input parallel ${parallel}`);
   if (Number.isNaN(parallel)) {
-    console.error('Parallel was invalid');
-    core.error('Parallel was invalid');
-    return Promise.reject(`Invalid integer value for parallel, got ${core.getInput('parallel')}`);
+    throw new Error(`Invalid integer value for parallel, got ${core.getInput('parallel')}`);
   }
 
-  console.log('About to make redirects');
-  core.debug('About to make redirects');
   await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
-  console.log('Finished making redirects');
-  core.debug('Finished making redirects');
 };
 
 export const run = async () => {
-  console.log('Starting run');
-  core.debug('Starting run');
+  core.debug('Starting tinymce-docs-generate-redirects-action');
   try {
     await main();
   } catch (err) {

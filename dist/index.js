@@ -28,10 +28,11 @@ import require$$6 from 'string_decoder';
 import require$$0$8 from 'diagnostics_channel';
 import require$$2$2, { exec as exec$1 } from 'child_process';
 import require$$6$1 from 'timers';
-import fs, { ReadStream, lstatSync, fstatSync } from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import fs$1 from 'fs/promises';
 import { versions, env } from 'process';
+import { ReadStream, lstatSync, fstatSync } from 'node:fs';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -39035,7 +39036,7 @@ class PutObjectCommand extends Command
  */
 const checkS3ObjectExists = async (buildPath, _client, _bucket, _prefix, subPath) => {
   // it's too slow to talk to s3, so just check the local files we just uploaded...
-  return fs.existsSync(path.join(buildPath, subPath));
+  return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
 };
 
 /**
@@ -39251,77 +39252,61 @@ const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirect
 };
 
 const main = async () => {
-  console.log('Getting input build');
-  coreExports.debug('Getting input build');
   const buildPath = coreExports.getInput('build');
-  console.log('Got input build: ' + buildPath);
-  coreExports.debug('Got input build: ' + buildPath);
+  coreExports.debug(`Got input build "${buildPath}" which resolves to "${path.resolve(buildPath)}"`);
 
-  console.log('Getting input redirects');
-  coreExports.debug('Getting input redirects');
-  const redirectsPath = coreExports.getInput('redirects');
-  console.log('Got input redirects: ' + redirectsPath);
-  coreExports.debug('Got input redirects: ' + redirectsPath);
+  const redirectsSource = coreExports.getInput('redirects');
+  coreExports.debug(`Got input redirects "${redirectsSource}"`);
 
-  console.log('Loading file redirects: ' + path.resolve(redirectsPath));
-  coreExports.debug('Loading file redirects: ' + path.resolve(redirectsPath));
   /**
    * @type {{location: string, pattern?: string, redirect: string}[]}
    */
-  const redirects = JSON.parse(fs.readFileSync(redirectsPath, 'utf-8'));
+  const redirects = await (async () => {
+    if (redirectsSource.startsWith('https://')) {
+    const response = await fetch(redirectsSource);
+      if (!response.ok) {
+        throw new Error('Unable to fetch ' + redirectsSource);
+      }
+      return response.json();
+    } else {
+      return JSON.parse(await fs.readFile(redirectsSource, 'utf-8'));
+    }
+  })();
+  if (!(Array.isArray(redirects) && redirects.every((v) => (
+    typeof v === 'object' && typeof v.location === 'string' && 
+    typeof v.redirect === 'string' && 
+    (typeof v.pattern === 'undefined' || typeof v.pattern === 'string')
+  )))) {
+    throw new Error(`Invalid redirects data`);
+  }
 
-  console.log('Got redirects: ' + redirects.length);
-  coreExports.debug('Got redirects: ' + redirects.length);
-
-  console.log('Getting input bucket');
-  coreExports.debug('Getting input bucket');
   const bucket = coreExports.getInput('bucket');
-  console.log('Got input bucket: ' + bucket);
-  coreExports.debug('Got input bucket: ' + bucket);
-
-
+  coreExports.debug(`Got input bucket "${bucket}"`);
   if (!/^[a-z0-9][a-z0-9\.-]{1,61}[a-z0-9]$/.test(bucket) ||
     /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
     /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
     /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
     /--x-s3$/.test(bucket) || /--table-s3$/.test(bucket)) {
-    console.error('Bucket was invalid');
-    coreExports.error('Bucket was invalid');
-    return Promise.reject(`Invalid bucket name, got ${bucket}`);
+    throw new Error(`Invalid bucket name, got ${bucket}`);
   }
 
-  console.log('Getting input prefix');
-  coreExports.debug('Getting input prefix');
   const prefix = coreExports.getInput('prefix');
-  console.log('Got input prefix: ' + prefix);
-  coreExports.debug('Got input prefix: ' + prefix);
+  coreExports.debug(`Got input prefix "${prefix}"`);
   if (!/^[a-z0-9\.-]+(\/[a-z0-9\.-]+)*$/.test(prefix)) {
-    console.error('Prefix was invalid');
-    coreExports.error('Prefix was invalid');
-    return Promise.reject(`Invalid prefix, got ${prefix}`);
+    throw new Error(`Invalid prefix, got ${prefix}`);
   }
 
-  console.log('Getting input parallel');
-  coreExports.debug('Getting input parallel');
   const parallel = parseInt(coreExports.getInput('parallel'), 10);
-  console.log('Got input parallel: ' + parallel);
-  coreExports.debug('Got input parallel: ' + parallel);
+  coreExports.debug(`Got input parallel ${parallel}`);
   if (Number.isNaN(parallel)) {
-    console.error('Parallel was invalid');
-    coreExports.error('Parallel was invalid');
-    return Promise.reject(`Invalid integer value for parallel, got ${coreExports.getInput('parallel')}`);
+    throw new Error(`Invalid integer value for parallel, got ${coreExports.getInput('parallel')}`);
   }
 
-  console.log('About to make redirects');
-  coreExports.debug('About to make redirects');
   await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
-  console.log('Finished making redirects');
-  coreExports.debug('Finished making redirects');
 };
 
 const run = async () => {
-  console.log('Starting run');
-  coreExports.debug('Starting run');
+  coreExports.debug('Starting tinymce-docs-generate-redirects-action');
   try {
     await main();
   } catch (err) {
