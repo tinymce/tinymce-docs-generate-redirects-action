@@ -39325,8 +39325,10 @@ const run = async () => {
   try {
     await main();
   } catch (err) {
-    if (err instanceof Error) {
-      coreExports.setFailed(err.message);
+    if (typeof err === 'string' || err instanceof Error) {
+      coreExports.setFailed(err);
+    } else {
+      coreExports.setFailed(err !== undefined ? String(err) : 'unknown error');
     }
   }
 };

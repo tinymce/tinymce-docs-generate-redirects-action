@@ -308,8 +308,10 @@ export const run = async () => {
   try {
     await main();
   } catch (err) {
-    if (err instanceof Error) {
-      core.setFailed(err.message);
+    if (typeof err === 'string' || err instanceof Error) {
+      core.setFailed(err);
+    } else {
+      core.setFailed(err !== undefined ? String(err) : 'unknown error')
     }
   }
 };
