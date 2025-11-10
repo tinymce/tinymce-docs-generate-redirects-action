@@ -39291,6 +39291,8 @@ const run = async () => {
   }
 };
 
+run();
+
 function httpRequest(options) {
     return new Promise((resolve, reject) => {
         const req = request$3({
@@ -42692,6 +42694,4 @@ var index = /*#__PURE__*/Object.freeze({
 	getDefaultRoleAssumer: getDefaultRoleAssumer,
 	getDefaultRoleAssumerWithWebIdentity: getDefaultRoleAssumerWithWebIdentity
 });
-
-export { run };
 //# sourceMappingURL=index.js.map
