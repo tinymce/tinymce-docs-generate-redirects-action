@@ -1,9 +1,8 @@
 {
   "name": "tinymce-docs-generate-redirects-action",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup --config rollup.config.mjs"
   },
   "keywords": [],
@@ -20,5 +19,6 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "rollup": "^4.52.5"
-  }
+  },
+  "type": "module"
 }
