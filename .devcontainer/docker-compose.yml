@@ -13,6 +13,11 @@ services:
       - s3
     depends_on:
       - s3
+    environment:
+      AWS_ENDPOINT_URL: http://s3:9000
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: SecurePassword123!
+      AWS_REGION: us-east-1
   
   s3:
     image: minio/minio:latest
