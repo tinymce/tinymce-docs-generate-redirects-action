@@ -38,6 +38,6 @@ with:
   build: ./build/
   redirects: ./redirects.json
   bucket: tiny-cloud-antora-docs-preview
-  prefix: ${PR}/${RUN}
+  prefix: ${{env.PR}}/${{env.RUN}}
   parallel: 10
 ```

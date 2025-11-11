@@ -3,22 +3,25 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rollup --config rollup.config.mjs"
+    "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript"
   },
   "keywords": [],
-  "author": "",
+  "author": "Tiny Technologies Inc.",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.1",
     "@aws-sdk/client-s3": "^3.926.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "rollup": "^4.52.5"
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^22",
+    "rollup": "^4.52.5",
+    "typescript": "^5.9.3"
   },
-  "type": "module"
+  "type": "module",
+  "repository": "git@github.com:tinymce/tinymce-docs-generate-redirects-action.git"
 }

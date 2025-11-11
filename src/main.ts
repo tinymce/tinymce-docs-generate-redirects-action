@@ -10,24 +10,30 @@ import {
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+interface S3Operation {
+  copied: boolean;
+  subPath: string;
+  error?: S3ServiceException;
+}
+
+interface Redirect {
+  location: string;
+  pattern?: string;
+  redirect: string;
+}
+
 /**
  * Check if an S3 object exists
  */
-const checkS3ObjectExists = async (buildPath, _client, _bucket, _prefix, subPath) => {
+const checkS3ObjectExists = async (buildPath: string, _client: S3Client, _bucket: string, _prefix: string, subPath: string): Promise<boolean> => {
   // it's too slow to talk to s3, so just check the local files we just uploaded...
   return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
 }
 
 /**
- * 
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {string} subPath 
- * @param {Record<string, string>} metadata 
- * @returns {Promise<{ copied: boolean, subPath: string, error?: S3ServiceException}>}
+ * Copy an object to itself while replacing the metadata.
  */
-const copyS3ObjectWithMetadataAsync = async (client, bucket, prefix, subPath, metadata) => {
+const copyS3ObjectWithMetadataAsync = async (client: S3Client, bucket: string, prefix: string, subPath: string, metadata: Record<string, string>): Promise<S3Operation> => {
   const copied = true;
   const fullPath = `${prefix}/${subPath}`;
   const command = new CopyObjectCommand({
@@ -51,15 +57,9 @@ const copyS3ObjectWithMetadataAsync = async (client, bucket, prefix, subPath, me
 };
 
 /**
- * 
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {string} subPath 
- * @param {Record<string, string>} metadata 
- * @returns {Promise<{ copied: boolean, subPath: string, error?: S3ServiceException}>}
+ * Create a object containing an HTML file with metadata.
  */
-const createNewS3ObjectAsync = async (client, bucket, prefix, subPath, metadata) => {
+const createNewS3ObjectAsync = async (client: S3Client, bucket: string, prefix: string, subPath: string, metadata: Record<string, string>): Promise<S3Operation> => {
   const copied = false;
   const fullPath = `${prefix}/${subPath}`;
   const command = new PutObjectCommand({
@@ -82,16 +82,9 @@ const createNewS3ObjectAsync = async (client, bucket, prefix, subPath, metadata)
 }
 
 /**
- * 
- * @param {string} buildPath
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {string} subPath 
- * @param {Record<string, string>} metadata 
- * @returns 
+ * Setup an object with metadata.
  */
-const createOrUpdateS3ObjectAsync = async (buildPath, client, bucket, prefix, subPath, metadata) => {
+const createOrUpdateS3ObjectAsync = async (buildPath: string, client: S3Client, bucket: string, prefix: string, subPath: string, metadata: Record<string, string>): Promise<S3Operation> => {
   // Check if object already exists
   if (await checkS3ObjectExists(buildPath, client, bucket, prefix, subPath)) {
     return copyS3ObjectWithMetadataAsync(client, bucket, prefix, subPath, metadata);
@@ -104,14 +97,8 @@ const createOrUpdateS3ObjectAsync = async (buildPath, client, bucket, prefix, su
  * Important: do not make this an async generator as that means it can only 
  * produce one value at a time. It must instead be a normal generator that 
  * returns promises.
- * 
- * @param {string} buildPath
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {Map<string, string>} redirectsByLocation 
  */
-function* generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redirectsByLocation) {
+function* generateRedirectObjectsAsync(buildPath: string, client: S3Client, bucket: string, prefix: string, redirectsByLocation: Map<string, Redirect[]>): Generator<Promise<S3Operation>, void, unknown> {
   for (const [location, locationRedirects] of redirectsByLocation) {
     // Create S3 object path by appending index.html to location
     const locationIndexHtml = location.endsWith('/')
@@ -122,7 +109,7 @@ function* generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redire
     const subPath = locationIndexHtml.startsWith('/') ? locationIndexHtml.slice(1) : locationIndexHtml;
 
     // Build metadata headers
-    const metadata = {};
+    const metadata: Record<string, string> = {};
 
     locationRedirects.forEach((redirect, index) => {
       const i = index + 1; // 1-based indexing as requested
@@ -144,31 +131,20 @@ function* generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redire
 /**
  * This takes in a normal generator that returns promises and returns an async
  * generator that runs `max` of those promises in parallel to improve throughput.
- * @template T
- * @param {number} max 
- * @param {Generator<Promise<T>, void, unknown>} source 
- * @returns {AsyncGenerator<T, void, unknown>}
  */
-async function* parallelGenerator(max, source) {
-  /**
-   * @param {number} i
-   * @param {IteratorResult<Promise<T>, void>} task 
-   * @returns {Promise<[number, IteratorResult<T>]>}
-   */
-  const wrap = (i, task) => new Promise((resolve) => {
+async function* parallelGenerator<T>(max: number, source: Generator<Promise<T>, void, unknown>): AsyncGenerator<T, void, unknown> {
+  const wrap = (i: number, task: IteratorResult<Promise<T>, void>): Promise<[number, IteratorResult<T>]> => new Promise((resolve) => {
     if (task.done) {
-      resolve([i, { done: true }]);
+      resolve([i, { done: true, value: undefined }]);
     } else {
       task.value.then((v) => resolve([i, { done: false, value: v }]))
     }
   })
-  /** @type {(Promise<[number, IteratorResult<T, void>]>)[]} */
-  let tasks = [];
+  let tasks: (Promise<[number, IteratorResult<T, void>]>)[] = [];
   for (let i = 0; i < max; i++) {
     tasks.push(wrap(i, source.next()))
   }
-  /** @type {(Promise<[number, IteratorResult<T, void>]> | null)[]} */
-  let tasksAndNull;
+  let tasksAndNull: (Promise<[number, IteratorResult<T, void>]> | null)[];
   while (true) {
     const [i, v] = await Promise.race(tasks);
     if (v.done) {
@@ -193,26 +169,20 @@ async function* parallelGenerator(max, source) {
 }
 
 /**
- *  
- * @param {string} buildPath
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {number} parallel
- * @param {{location: string, pattern?: string, redirect: string}[]} redirects
+ * Make objects representing all the redirects.
  */
-const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirects) => {
+const makeRedirectObjects = async (buildPath: string, bucket: string, prefix: string, parallel: number, redirects: Redirect[]): Promise<void> => {
   let successCount = 0;
   let errorCount = 0;
   // Group redirects by location to handle multiple redirects for the same location
-  /** @type {Map<string, {location: string, pattern?: string, redirect: string}[]>} */
-  const redirectsByLocation = new Map();
+  const redirectsByLocation: Map<string, Redirect[]> = new Map();
 
   redirects.forEach((redirect) => {
     const location = redirect.location;
     if (!redirectsByLocation.has(location)) {
       redirectsByLocation.set(location, []);
     }
-    redirectsByLocation.get(location).push(redirect);
+    redirectsByLocation.get(location)?.push(redirect);
   });
 
   const client = new S3Client({});
@@ -222,7 +192,7 @@ const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirect
   for await (const taskResult of tasks) {
     const { subPath, error, copied } = taskResult;
     processedCount++;
-    core.info(`Processed ${((processedCount / redirectsByLocation.size) * 100).toFixed(1)}%: ${taskResult.subPath}`);
+    core.info(`Processed ${((processedCount / redirectsByLocation.size) * 100).toFixed(1)}%: ${subPath}`);
     if (error) {
       errorCount++;
       core.error(`Error ${copied ? 'Updating' : 'Creating'} S3 object ${prefix}/${subPath}: ${error.message}`);
@@ -233,17 +203,17 @@ const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirect
   core.info(`Finished with ${errorCount} error(s)`);
 };
 
-const main = async () => {
+/**
+ * Get inputs from github and create redirects.
+ */
+const main = async (): Promise<void> => {
   const buildPath = core.getInput('build');
   core.debug(`Got input build "${buildPath}" which resolves to "${path.resolve(buildPath)}"`);
 
   const redirectsSource = core.getInput('redirects');
   core.debug(`Got input redirects "${redirectsSource}"`);
 
-  /**
-   * @type {{location: string, pattern?: string, redirect: string}[]}
-   */
-  const redirects = await (async () => {
+  const redirects: Redirect[] = await (async () => {
     if (redirectsSource.startsWith('https://')) {
     const response = await fetch(redirectsSource);
       if (!response.ok) {
@@ -287,6 +257,9 @@ const main = async () => {
   await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
 };
 
+/**
+ * Run the action and report errors.
+ */
 export const run = async () => {
   core.debug('Starting tinymce-docs-generate-redirects-action');
   try {

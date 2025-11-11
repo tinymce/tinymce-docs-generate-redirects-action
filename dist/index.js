@@ -28,9 +28,9 @@ import require$$6 from 'string_decoder';
 import require$$0$8 from 'diagnostics_channel';
 import require$$2$2, { exec as exec$1 } from 'child_process';
 import require$$6$1 from 'timers';
-import fs from 'node:fs/promises';
+import fs, { readFile as readFile$2 } from 'node:fs/promises';
 import path from 'node:path';
-import fs$1 from 'fs/promises';
+import fs$1, { readFile as readFile$1 } from 'fs/promises';
 import { versions, env } from 'process';
 import { ReadStream, lstatSync, fstatSync } from 'node:fs';
 
@@ -8225,9 +8225,9 @@ var hasRequiredConstants$2;
 function requireConstants$2 () {
 	if (hasRequiredConstants$2) return constants$2;
 	hasRequiredConstants$2 = 1;
-	(function (exports) {
-		Object.defineProperty(exports, "__esModule", { value: true });
-		exports.SPECIAL_HEADERS = exports.HEADER_STATE = exports.MINOR = exports.MAJOR = exports.CONNECTION_TOKEN_CHARS = exports.HEADER_CHARS = exports.TOKEN = exports.STRICT_TOKEN = exports.HEX = exports.URL_CHAR = exports.STRICT_URL_CHAR = exports.USERINFO_CHARS = exports.MARK = exports.ALPHANUM = exports.NUM = exports.HEX_MAP = exports.NUM_MAP = exports.ALPHA = exports.FINISH = exports.H_METHOD_MAP = exports.METHOD_MAP = exports.METHODS_RTSP = exports.METHODS_ICE = exports.METHODS_HTTP = exports.METHODS = exports.LENIENT_FLAGS = exports.FLAGS = exports.TYPE = exports.ERROR = void 0;
+	(function (exports$1) {
+		Object.defineProperty(exports$1, "__esModule", { value: true });
+		exports$1.SPECIAL_HEADERS = exports$1.HEADER_STATE = exports$1.MINOR = exports$1.MAJOR = exports$1.CONNECTION_TOKEN_CHARS = exports$1.HEADER_CHARS = exports$1.TOKEN = exports$1.STRICT_TOKEN = exports$1.HEX = exports$1.URL_CHAR = exports$1.STRICT_URL_CHAR = exports$1.USERINFO_CHARS = exports$1.MARK = exports$1.ALPHANUM = exports$1.NUM = exports$1.HEX_MAP = exports$1.NUM_MAP = exports$1.ALPHA = exports$1.FINISH = exports$1.H_METHOD_MAP = exports$1.METHOD_MAP = exports$1.METHODS_RTSP = exports$1.METHODS_ICE = exports$1.METHODS_HTTP = exports$1.METHODS = exports$1.LENIENT_FLAGS = exports$1.FLAGS = exports$1.TYPE = exports$1.ERROR = void 0;
 		const utils_1 = requireUtils();
 		(function (ERROR) {
 		    ERROR[ERROR["OK"] = 0] = "OK";
@@ -8255,12 +8255,12 @@ function requireConstants$2 () {
 		    ERROR[ERROR["PAUSED_UPGRADE"] = 22] = "PAUSED_UPGRADE";
 		    ERROR[ERROR["PAUSED_H2_UPGRADE"] = 23] = "PAUSED_H2_UPGRADE";
 		    ERROR[ERROR["USER"] = 24] = "USER";
-		})(exports.ERROR || (exports.ERROR = {}));
+		})(exports$1.ERROR || (exports$1.ERROR = {}));
 		(function (TYPE) {
 		    TYPE[TYPE["BOTH"] = 0] = "BOTH";
 		    TYPE[TYPE["REQUEST"] = 1] = "REQUEST";
 		    TYPE[TYPE["RESPONSE"] = 2] = "RESPONSE";
-		})(exports.TYPE || (exports.TYPE = {}));
+		})(exports$1.TYPE || (exports$1.TYPE = {}));
 		(function (FLAGS) {
 		    FLAGS[FLAGS["CONNECTION_KEEP_ALIVE"] = 1] = "CONNECTION_KEEP_ALIVE";
 		    FLAGS[FLAGS["CONNECTION_CLOSE"] = 2] = "CONNECTION_CLOSE";
@@ -8272,12 +8272,12 @@ function requireConstants$2 () {
 		    FLAGS[FLAGS["TRAILING"] = 128] = "TRAILING";
 		    // 1 << 8 is unused
 		    FLAGS[FLAGS["TRANSFER_ENCODING"] = 512] = "TRANSFER_ENCODING";
-		})(exports.FLAGS || (exports.FLAGS = {}));
+		})(exports$1.FLAGS || (exports$1.FLAGS = {}));
 		(function (LENIENT_FLAGS) {
 		    LENIENT_FLAGS[LENIENT_FLAGS["HEADERS"] = 1] = "HEADERS";
 		    LENIENT_FLAGS[LENIENT_FLAGS["CHUNKED_LENGTH"] = 2] = "CHUNKED_LENGTH";
 		    LENIENT_FLAGS[LENIENT_FLAGS["KEEP_ALIVE"] = 4] = "KEEP_ALIVE";
-		})(exports.LENIENT_FLAGS || (exports.LENIENT_FLAGS = {}));
+		})(exports$1.LENIENT_FLAGS || (exports$1.LENIENT_FLAGS = {}));
 		var METHODS;
 		(function (METHODS) {
 		    METHODS[METHODS["DELETE"] = 0] = "DELETE";
@@ -8337,8 +8337,8 @@ function requireConstants$2 () {
 		    METHODS[METHODS["RECORD"] = 44] = "RECORD";
 		    /* RAOP */
 		    METHODS[METHODS["FLUSH"] = 45] = "FLUSH";
-		})(METHODS = exports.METHODS || (exports.METHODS = {}));
-		exports.METHODS_HTTP = [
+		})(METHODS = exports$1.METHODS || (exports$1.METHODS = {}));
+		exports$1.METHODS_HTTP = [
 		    METHODS.DELETE,
 		    METHODS.GET,
 		    METHODS.HEAD,
@@ -8376,10 +8376,10 @@ function requireConstants$2 () {
 		    // TODO(indutny): should we allow it with HTTP?
 		    METHODS.SOURCE,
 		];
-		exports.METHODS_ICE = [
+		exports$1.METHODS_ICE = [
 		    METHODS.SOURCE,
 		];
-		exports.METHODS_RTSP = [
+		exports$1.METHODS_RTSP = [
 		    METHODS.OPTIONS,
 		    METHODS.DESCRIBE,
 		    METHODS.ANNOUNCE,
@@ -8396,59 +8396,59 @@ function requireConstants$2 () {
 		    METHODS.GET,
 		    METHODS.POST,
 		];
-		exports.METHOD_MAP = utils_1.enumToMap(METHODS);
-		exports.H_METHOD_MAP = {};
-		Object.keys(exports.METHOD_MAP).forEach((key) => {
+		exports$1.METHOD_MAP = utils_1.enumToMap(METHODS);
+		exports$1.H_METHOD_MAP = {};
+		Object.keys(exports$1.METHOD_MAP).forEach((key) => {
 		    if (/^H/.test(key)) {
-		        exports.H_METHOD_MAP[key] = exports.METHOD_MAP[key];
+		        exports$1.H_METHOD_MAP[key] = exports$1.METHOD_MAP[key];
 		    }
 		});
 		(function (FINISH) {
 		    FINISH[FINISH["SAFE"] = 0] = "SAFE";
 		    FINISH[FINISH["SAFE_WITH_CB"] = 1] = "SAFE_WITH_CB";
 		    FINISH[FINISH["UNSAFE"] = 2] = "UNSAFE";
-		})(exports.FINISH || (exports.FINISH = {}));
-		exports.ALPHA = [];
+		})(exports$1.FINISH || (exports$1.FINISH = {}));
+		exports$1.ALPHA = [];
 		for (let i = 'A'.charCodeAt(0); i <= 'Z'.charCodeAt(0); i++) {
 		    // Upper case
-		    exports.ALPHA.push(String.fromCharCode(i));
+		    exports$1.ALPHA.push(String.fromCharCode(i));
 		    // Lower case
-		    exports.ALPHA.push(String.fromCharCode(i + 0x20));
+		    exports$1.ALPHA.push(String.fromCharCode(i + 0x20));
 		}
-		exports.NUM_MAP = {
+		exports$1.NUM_MAP = {
 		    0: 0, 1: 1, 2: 2, 3: 3, 4: 4,
 		    5: 5, 6: 6, 7: 7, 8: 8, 9: 9,
 		};
-		exports.HEX_MAP = {
+		exports$1.HEX_MAP = {
 		    0: 0, 1: 1, 2: 2, 3: 3, 4: 4,
 		    5: 5, 6: 6, 7: 7, 8: 8, 9: 9,
 		    A: 0XA, B: 0XB, C: 0XC, D: 0XD, E: 0XE, F: 0XF,
 		    a: 0xa, b: 0xb, c: 0xc, d: 0xd, e: 0xe, f: 0xf,
 		};
-		exports.NUM = [
+		exports$1.NUM = [
 		    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 		];
-		exports.ALPHANUM = exports.ALPHA.concat(exports.NUM);
-		exports.MARK = ['-', '_', '.', '!', '~', '*', '\'', '(', ')'];
-		exports.USERINFO_CHARS = exports.ALPHANUM
-		    .concat(exports.MARK)
+		exports$1.ALPHANUM = exports$1.ALPHA.concat(exports$1.NUM);
+		exports$1.MARK = ['-', '_', '.', '!', '~', '*', '\'', '(', ')'];
+		exports$1.USERINFO_CHARS = exports$1.ALPHANUM
+		    .concat(exports$1.MARK)
 		    .concat(['%', ';', ':', '&', '=', '+', '$', ',']);
 		// TODO(indutny): use RFC
-		exports.STRICT_URL_CHAR = [
+		exports$1.STRICT_URL_CHAR = [
 		    '!', '"', '$', '%', '&', '\'',
 		    '(', ')', '*', '+', ',', '-', '.', '/',
 		    ':', ';', '<', '=', '>',
 		    '@', '[', '\\', ']', '^', '_',
 		    '`',
 		    '{', '|', '}', '~',
-		].concat(exports.ALPHANUM);
-		exports.URL_CHAR = exports.STRICT_URL_CHAR
+		].concat(exports$1.ALPHANUM);
+		exports$1.URL_CHAR = exports$1.STRICT_URL_CHAR
 		    .concat(['\t', '\f']);
 		// All characters with 0x80 bit set to 1
 		for (let i = 0x80; i <= 0xff; i++) {
-		    exports.URL_CHAR.push(i);
+		    exports$1.URL_CHAR.push(i);
 		}
-		exports.HEX = exports.NUM.concat(['a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F']);
+		exports$1.HEX = exports$1.NUM.concat(['a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F']);
 		/* Tokens as defined by rfc 2616. Also lowercases them.
 		 *        token       = 1*<any CHAR except CTLs or separators>
 		 *     separators     = "(" | ")" | "<" | ">" | "@"
@@ -8456,27 +8456,27 @@ function requireConstants$2 () {
 		 *                    | "/" | "[" | "]" | "?" | "="
 		 *                    | "{" | "}" | SP | HT
 		 */
-		exports.STRICT_TOKEN = [
+		exports$1.STRICT_TOKEN = [
 		    '!', '#', '$', '%', '&', '\'',
 		    '*', '+', '-', '.',
 		    '^', '_', '`',
 		    '|', '~',
-		].concat(exports.ALPHANUM);
-		exports.TOKEN = exports.STRICT_TOKEN.concat([' ']);
+		].concat(exports$1.ALPHANUM);
+		exports$1.TOKEN = exports$1.STRICT_TOKEN.concat([' ']);
 		/*
 		 * Verify that a char is a valid visible (printable) US-ASCII
 		 * character or %x80-FF
 		 */
-		exports.HEADER_CHARS = ['\t'];
+		exports$1.HEADER_CHARS = ['\t'];
 		for (let i = 32; i <= 255; i++) {
 		    if (i !== 127) {
-		        exports.HEADER_CHARS.push(i);
+		        exports$1.HEADER_CHARS.push(i);
 		    }
 		}
 		// ',' = \x44
-		exports.CONNECTION_TOKEN_CHARS = exports.HEADER_CHARS.filter((c) => c !== 44);
-		exports.MAJOR = exports.NUM_MAP;
-		exports.MINOR = exports.MAJOR;
+		exports$1.CONNECTION_TOKEN_CHARS = exports$1.HEADER_CHARS.filter((c) => c !== 44);
+		exports$1.MAJOR = exports$1.NUM_MAP;
+		exports$1.MINOR = exports$1.MAJOR;
 		var HEADER_STATE;
 		(function (HEADER_STATE) {
 		    HEADER_STATE[HEADER_STATE["GENERAL"] = 0] = "GENERAL";
@@ -8488,8 +8488,8 @@ function requireConstants$2 () {
 		    HEADER_STATE[HEADER_STATE["CONNECTION_CLOSE"] = 6] = "CONNECTION_CLOSE";
 		    HEADER_STATE[HEADER_STATE["CONNECTION_UPGRADE"] = 7] = "CONNECTION_UPGRADE";
 		    HEADER_STATE[HEADER_STATE["TRANSFER_ENCODING_CHUNKED"] = 8] = "TRANSFER_ENCODING_CHUNKED";
-		})(HEADER_STATE = exports.HEADER_STATE || (exports.HEADER_STATE = {}));
-		exports.SPECIAL_HEADERS = {
+		})(HEADER_STATE = exports$1.HEADER_STATE || (exports$1.HEADER_STATE = {}));
+		exports$1.SPECIAL_HEADERS = {
 		    'connection': HEADER_STATE.CONNECTION,
 		    'content-length': HEADER_STATE.CONTENT_LENGTH,
 		    'proxy-connection': HEADER_STATE.CONNECTION,
@@ -9328,10 +9328,10 @@ function requireClient () {
 	const TIMEOUT_IDLE = 3;
 
 	class Parser {
-	  constructor (client, socket, { exports }) {
+	  constructor (client, socket, { exports: exports$1 }) {
 	    assert(Number.isFinite(client[kMaxHeadersSize]) && client[kMaxHeadersSize] > 0);
 
-	    this.llhttp = exports;
+	    this.llhttp = exports$1;
 	    this.ptr = this.llhttp.llhttp_alloc(constants.TYPE.RESPONSE);
 	    this.client = client;
 	    this.socket = socket;
@@ -25193,7 +25193,7 @@ var hasRequiredSummary;
 function requireSummary () {
 	if (hasRequiredSummary) return summary;
 	hasRequiredSummary = 1;
-	(function (exports) {
+	(function (exports$1) {
 		var __awaiter = (summary && summary.__awaiter) || function (thisArg, _arguments, P, generator) {
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
@@ -25203,13 +25203,13 @@ function requireSummary () {
 		        step((generator = generator.apply(thisArg, _arguments || [])).next());
 		    });
 		};
-		Object.defineProperty(exports, "__esModule", { value: true });
-		exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
+		Object.defineProperty(exports$1, "__esModule", { value: true });
+		exports$1.summary = exports$1.markdownSummary = exports$1.SUMMARY_DOCS_URL = exports$1.SUMMARY_ENV_VAR = void 0;
 		const os_1 = require$$0;
 		const fs_1 = require$$1;
 		const { access, appendFile, writeFile } = fs_1.promises;
-		exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
-		exports.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary';
+		exports$1.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
+		exports$1.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary';
 		class Summary {
 		    constructor() {
 		        this._buffer = '';
@@ -25225,9 +25225,9 @@ function requireSummary () {
 		            if (this._filePath) {
 		                return this._filePath;
 		            }
-		            const pathFromEnv = process.env[exports.SUMMARY_ENV_VAR];
+		            const pathFromEnv = process.env[exports$1.SUMMARY_ENV_VAR];
 		            if (!pathFromEnv) {
-		                throw new Error(`Unable to find environment variable for $${exports.SUMMARY_ENV_VAR}. Check if your runtime environment supports job summaries.`);
+		                throw new Error(`Unable to find environment variable for $${exports$1.SUMMARY_ENV_VAR}. Check if your runtime environment supports job summaries.`);
 		            }
 		            try {
 		                yield access(pathFromEnv, fs_1.constants.R_OK | fs_1.constants.W_OK);
@@ -25473,8 +25473,8 @@ function requireSummary () {
 		/**
 		 * @deprecated use `core.summary`
 		 */
-		exports.markdownSummary = _summary;
-		exports.summary = _summary;
+		exports$1.markdownSummary = _summary;
+		exports$1.summary = _summary;
 		
 	} (summary));
 	return summary;
@@ -25566,7 +25566,7 @@ var hasRequiredIoUtil;
 function requireIoUtil () {
 	if (hasRequiredIoUtil) return ioUtil;
 	hasRequiredIoUtil = 1;
-	(function (exports) {
+	(function (exports$1) {
 		var __createBinding = (ioUtil && ioUtil.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
 		    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -25596,22 +25596,22 @@ function requireIoUtil () {
 		    });
 		};
 		var _a;
-		Object.defineProperty(exports, "__esModule", { value: true });
-		exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
+		Object.defineProperty(exports$1, "__esModule", { value: true });
+		exports$1.getCmdPath = exports$1.tryGetExecutablePath = exports$1.isRooted = exports$1.isDirectory = exports$1.exists = exports$1.READONLY = exports$1.UV_FS_O_EXLOCK = exports$1.IS_WINDOWS = exports$1.unlink = exports$1.symlink = exports$1.stat = exports$1.rmdir = exports$1.rm = exports$1.rename = exports$1.readlink = exports$1.readdir = exports$1.open = exports$1.mkdir = exports$1.lstat = exports$1.copyFile = exports$1.chmod = void 0;
 		const fs = __importStar(require$$1);
 		const path = __importStar(require$$1$5);
 		_a = fs.promises
 		// export const {open} = 'fs'
-		, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.open = _a.open, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rm = _a.rm, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
+		, exports$1.chmod = _a.chmod, exports$1.copyFile = _a.copyFile, exports$1.lstat = _a.lstat, exports$1.mkdir = _a.mkdir, exports$1.open = _a.open, exports$1.readdir = _a.readdir, exports$1.readlink = _a.readlink, exports$1.rename = _a.rename, exports$1.rm = _a.rm, exports$1.rmdir = _a.rmdir, exports$1.stat = _a.stat, exports$1.symlink = _a.symlink, exports$1.unlink = _a.unlink;
 		// export const {open} = 'fs'
-		exports.IS_WINDOWS = process.platform === 'win32';
+		exports$1.IS_WINDOWS = process.platform === 'win32';
 		// See https://github.com/nodejs/node/blob/d0153aee367422d0858105abec186da4dff0a0c5/deps/uv/include/uv/win.h#L691
-		exports.UV_FS_O_EXLOCK = 0x10000000;
-		exports.READONLY = fs.constants.O_RDONLY;
+		exports$1.UV_FS_O_EXLOCK = 0x10000000;
+		exports$1.READONLY = fs.constants.O_RDONLY;
 		function exists(fsPath) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        try {
-		            yield exports.stat(fsPath);
+		            yield exports$1.stat(fsPath);
 		        }
 		        catch (err) {
 		            if (err.code === 'ENOENT') {
@@ -25622,14 +25622,14 @@ function requireIoUtil () {
 		        return true;
 		    });
 		}
-		exports.exists = exists;
+		exports$1.exists = exists;
 		function isDirectory(fsPath, useStat = false) {
 		    return __awaiter(this, void 0, void 0, function* () {
-		        const stats = useStat ? yield exports.stat(fsPath) : yield exports.lstat(fsPath);
+		        const stats = useStat ? yield exports$1.stat(fsPath) : yield exports$1.lstat(fsPath);
 		        return stats.isDirectory();
 		    });
 		}
-		exports.isDirectory = isDirectory;
+		exports$1.isDirectory = isDirectory;
 		/**
 		 * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
 		 * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
@@ -25639,13 +25639,13 @@ function requireIoUtil () {
 		    if (!p) {
 		        throw new Error('isRooted() parameter "p" cannot be empty');
 		    }
-		    if (exports.IS_WINDOWS) {
+		    if (exports$1.IS_WINDOWS) {
 		        return (p.startsWith('\\') || /^[A-Z]:/i.test(p) // e.g. \ or \hello or \\hello
 		        ); // e.g. C: or C:\hello
 		    }
 		    return p.startsWith('/');
 		}
-		exports.isRooted = isRooted;
+		exports$1.isRooted = isRooted;
 		/**
 		 * Best effort attempt to determine whether a file exists and is executable.
 		 * @param filePath    file path to check
@@ -25657,7 +25657,7 @@ function requireIoUtil () {
 		        let stats = undefined;
 		        try {
 		            // test file exists
-		            stats = yield exports.stat(filePath);
+		            stats = yield exports$1.stat(filePath);
 		        }
 		        catch (err) {
 		            if (err.code !== 'ENOENT') {
@@ -25666,7 +25666,7 @@ function requireIoUtil () {
 		            }
 		        }
 		        if (stats && stats.isFile()) {
-		            if (exports.IS_WINDOWS) {
+		            if (exports$1.IS_WINDOWS) {
 		                // on Windows, test for valid extension
 		                const upperExt = path.extname(filePath).toUpperCase();
 		                if (extensions.some(validExt => validExt.toUpperCase() === upperExt)) {
@@ -25685,7 +25685,7 @@ function requireIoUtil () {
 		            filePath = originalFilePath + extension;
 		            stats = undefined;
 		            try {
-		                stats = yield exports.stat(filePath);
+		                stats = yield exports$1.stat(filePath);
 		            }
 		            catch (err) {
 		                if (err.code !== 'ENOENT') {
@@ -25694,12 +25694,12 @@ function requireIoUtil () {
 		                }
 		            }
 		            if (stats && stats.isFile()) {
-		                if (exports.IS_WINDOWS) {
+		                if (exports$1.IS_WINDOWS) {
 		                    // preserve the case of the actual file (since an extension was appended)
 		                    try {
 		                        const directory = path.dirname(filePath);
 		                        const upperName = path.basename(filePath).toUpperCase();
-		                        for (const actualName of yield exports.readdir(directory)) {
+		                        for (const actualName of yield exports$1.readdir(directory)) {
 		                            if (upperName === actualName.toUpperCase()) {
 		                                filePath = path.join(directory, actualName);
 		                                break;
@@ -25722,10 +25722,10 @@ function requireIoUtil () {
 		        return '';
 		    });
 		}
-		exports.tryGetExecutablePath = tryGetExecutablePath;
+		exports$1.tryGetExecutablePath = tryGetExecutablePath;
 		function normalizeSeparators(p) {
 		    p = p || '';
-		    if (exports.IS_WINDOWS) {
+		    if (exports$1.IS_WINDOWS) {
 		        // convert slashes on Windows
 		        p = p.replace(/\//g, '\\');
 		        // remove redundant slashes
@@ -25747,7 +25747,7 @@ function requireIoUtil () {
 		    var _a;
 		    return (_a = process.env['COMSPEC']) !== null && _a !== void 0 ? _a : `cmd.exe`;
 		}
-		exports.getCmdPath = getCmdPath;
+		exports$1.getCmdPath = getCmdPath;
 		
 	} (ioUtil));
 	return ioUtil;
@@ -26799,7 +26799,7 @@ var hasRequiredPlatform;
 function requirePlatform () {
 	if (hasRequiredPlatform) return platform;
 	hasRequiredPlatform = 1;
-	(function (exports) {
+	(function (exports$1) {
 		var __createBinding = (platform && platform.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
 		    var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -26835,8 +26835,8 @@ function requirePlatform () {
 		var __importDefault = (platform && platform.__importDefault) || function (mod) {
 		    return (mod && mod.__esModule) ? mod : { "default": mod };
 		};
-		Object.defineProperty(exports, "__esModule", { value: true });
-		exports.getDetails = exports.isLinux = exports.isMacOS = exports.isWindows = exports.arch = exports.platform = void 0;
+		Object.defineProperty(exports$1, "__esModule", { value: true });
+		exports$1.getDetails = exports$1.isLinux = exports$1.isMacOS = exports$1.isWindows = exports$1.arch = exports$1.platform = void 0;
 		const os_1 = __importDefault(require$$0);
 		const exec = __importStar(requireExec());
 		const getWindowsInfo = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -26873,25 +26873,25 @@ function requirePlatform () {
 		        version
 		    };
 		});
-		exports.platform = os_1.default.platform();
-		exports.arch = os_1.default.arch();
-		exports.isWindows = exports.platform === 'win32';
-		exports.isMacOS = exports.platform === 'darwin';
-		exports.isLinux = exports.platform === 'linux';
+		exports$1.platform = os_1.default.platform();
+		exports$1.arch = os_1.default.arch();
+		exports$1.isWindows = exports$1.platform === 'win32';
+		exports$1.isMacOS = exports$1.platform === 'darwin';
+		exports$1.isLinux = exports$1.platform === 'linux';
 		function getDetails() {
 		    return __awaiter(this, void 0, void 0, function* () {
-		        return Object.assign(Object.assign({}, (yield (exports.isWindows
+		        return Object.assign(Object.assign({}, (yield (exports$1.isWindows
 		            ? getWindowsInfo()
-		            : exports.isMacOS
+		            : exports$1.isMacOS
 		                ? getMacOsInfo()
-		                : getLinuxInfo()))), { platform: exports.platform,
-		            arch: exports.arch,
-		            isWindows: exports.isWindows,
-		            isMacOS: exports.isMacOS,
-		            isLinux: exports.isLinux });
+		                : getLinuxInfo()))), { platform: exports$1.platform,
+		            arch: exports$1.arch,
+		            isWindows: exports$1.isWindows,
+		            isMacOS: exports$1.isMacOS,
+		            isLinux: exports$1.isLinux });
 		    });
 		}
-		exports.getDetails = getDetails;
+		exports$1.getDetails = getDetails;
 		
 	} (platform));
 	return platform;
@@ -26902,7 +26902,7 @@ var hasRequiredCore;
 function requireCore () {
 	if (hasRequiredCore) return core;
 	hasRequiredCore = 1;
-	(function (exports) {
+	(function (exports$1) {
 		var __createBinding = (core && core.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
 		    var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -26935,8 +26935,8 @@ function requireCore () {
 		        step((generator = generator.apply(thisArg, _arguments || [])).next());
 		    });
 		};
-		Object.defineProperty(exports, "__esModule", { value: true });
-		exports.platform = exports.toPlatformPath = exports.toWin32Path = exports.toPosixPath = exports.markdownSummary = exports.summary = exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
+		Object.defineProperty(exports$1, "__esModule", { value: true });
+		exports$1.platform = exports$1.toPlatformPath = exports$1.toWin32Path = exports$1.toPosixPath = exports$1.markdownSummary = exports$1.summary = exports$1.getIDToken = exports$1.getState = exports$1.saveState = exports$1.group = exports$1.endGroup = exports$1.startGroup = exports$1.info = exports$1.notice = exports$1.warning = exports$1.error = exports$1.debug = exports$1.isDebug = exports$1.setFailed = exports$1.setCommandEcho = exports$1.setOutput = exports$1.getBooleanInput = exports$1.getMultilineInput = exports$1.getInput = exports$1.addPath = exports$1.setSecret = exports$1.exportVariable = exports$1.ExitCode = void 0;
 		const command_1 = requireCommand();
 		const file_command_1 = requireFileCommand();
 		const utils_1 = requireUtils$1();
@@ -26956,7 +26956,7 @@ function requireCore () {
 		     * A code indicating that the action was a failure
 		     */
 		    ExitCode[ExitCode["Failure"] = 1] = "Failure";
-		})(ExitCode || (exports.ExitCode = ExitCode = {}));
+		})(ExitCode || (exports$1.ExitCode = ExitCode = {}));
 		//-----------------------------------------------------------------------
 		// Variables
 		//-----------------------------------------------------------------------
@@ -26975,7 +26975,7 @@ function requireCore () {
 		    }
 		    (0, command_1.issueCommand)('set-env', { name }, convertedVal);
 		}
-		exports.exportVariable = exportVariable;
+		exports$1.exportVariable = exportVariable;
 		/**
 		 * Registers a secret which will get masked from logs
 		 * @param secret value of the secret
@@ -26983,7 +26983,7 @@ function requireCore () {
 		function setSecret(secret) {
 		    (0, command_1.issueCommand)('add-mask', {}, secret);
 		}
-		exports.setSecret = setSecret;
+		exports$1.setSecret = setSecret;
 		/**
 		 * Prepends inputPath to the PATH (for this action and future actions)
 		 * @param inputPath
@@ -26998,7 +26998,7 @@ function requireCore () {
 		    }
 		    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
 		}
-		exports.addPath = addPath;
+		exports$1.addPath = addPath;
 		/**
 		 * Gets the value of an input.
 		 * Unless trimWhitespace is set to false in InputOptions, the value is also trimmed.
@@ -27018,7 +27018,7 @@ function requireCore () {
 		    }
 		    return val.trim();
 		}
-		exports.getInput = getInput;
+		exports$1.getInput = getInput;
 		/**
 		 * Gets the values of an multiline input.  Each value is also trimmed.
 		 *
@@ -27036,7 +27036,7 @@ function requireCore () {
 		    }
 		    return inputs.map(input => input.trim());
 		}
-		exports.getMultilineInput = getMultilineInput;
+		exports$1.getMultilineInput = getMultilineInput;
 		/**
 		 * Gets the input value of the boolean type in the YAML 1.2 "core schema" specification.
 		 * Support boolean input list: `true | True | TRUE | false | False | FALSE` .
@@ -27058,7 +27058,7 @@ function requireCore () {
 		    throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}\n` +
 		        `Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
 		}
-		exports.getBooleanInput = getBooleanInput;
+		exports$1.getBooleanInput = getBooleanInput;
 		/**
 		 * Sets the value of an output.
 		 *
@@ -27074,7 +27074,7 @@ function requireCore () {
 		    process.stdout.write(os.EOL);
 		    (0, command_1.issueCommand)('set-output', { name }, (0, utils_1.toCommandValue)(value));
 		}
-		exports.setOutput = setOutput;
+		exports$1.setOutput = setOutput;
 		/**
 		 * Enables or disables the echoing of commands into stdout for the rest of the step.
 		 * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
@@ -27083,7 +27083,7 @@ function requireCore () {
 		function setCommandEcho(enabled) {
 		    (0, command_1.issue)('echo', enabled ? 'on' : 'off');
 		}
-		exports.setCommandEcho = setCommandEcho;
+		exports$1.setCommandEcho = setCommandEcho;
 		//-----------------------------------------------------------------------
 		// Results
 		//-----------------------------------------------------------------------
@@ -27096,7 +27096,7 @@ function requireCore () {
 		    process.exitCode = ExitCode.Failure;
 		    error(message);
 		}
-		exports.setFailed = setFailed;
+		exports$1.setFailed = setFailed;
 		//-----------------------------------------------------------------------
 		// Logging Commands
 		//-----------------------------------------------------------------------
@@ -27106,7 +27106,7 @@ function requireCore () {
 		function isDebug() {
 		    return process.env['RUNNER_DEBUG'] === '1';
 		}
-		exports.isDebug = isDebug;
+		exports$1.isDebug = isDebug;
 		/**
 		 * Writes debug message to user log
 		 * @param message debug message
@@ -27114,7 +27114,7 @@ function requireCore () {
 		function debug(message) {
 		    (0, command_1.issueCommand)('debug', {}, message);
 		}
-		exports.debug = debug;
+		exports$1.debug = debug;
 		/**
 		 * Adds an error issue
 		 * @param message error issue message. Errors will be converted to string via toString()
@@ -27123,7 +27123,7 @@ function requireCore () {
 		function error(message, properties = {}) {
 		    (0, command_1.issueCommand)('error', (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
 		}
-		exports.error = error;
+		exports$1.error = error;
 		/**
 		 * Adds a warning issue
 		 * @param message warning issue message. Errors will be converted to string via toString()
@@ -27132,7 +27132,7 @@ function requireCore () {
 		function warning(message, properties = {}) {
 		    (0, command_1.issueCommand)('warning', (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
 		}
-		exports.warning = warning;
+		exports$1.warning = warning;
 		/**
 		 * Adds a notice issue
 		 * @param message notice issue message. Errors will be converted to string via toString()
@@ -27141,7 +27141,7 @@ function requireCore () {
 		function notice(message, properties = {}) {
 		    (0, command_1.issueCommand)('notice', (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
 		}
-		exports.notice = notice;
+		exports$1.notice = notice;
 		/**
 		 * Writes info to log with console.log.
 		 * @param message info message
@@ -27149,7 +27149,7 @@ function requireCore () {
 		function info(message) {
 		    process.stdout.write(message + os.EOL);
 		}
-		exports.info = info;
+		exports$1.info = info;
 		/**
 		 * Begin an output group.
 		 *
@@ -27160,14 +27160,14 @@ function requireCore () {
 		function startGroup(name) {
 		    (0, command_1.issue)('group', name);
 		}
-		exports.startGroup = startGroup;
+		exports$1.startGroup = startGroup;
 		/**
 		 * End an output group.
 		 */
 		function endGroup() {
 		    (0, command_1.issue)('endgroup');
 		}
-		exports.endGroup = endGroup;
+		exports$1.endGroup = endGroup;
 		/**
 		 * Wrap an asynchronous function call in a group.
 		 *
@@ -27189,7 +27189,7 @@ function requireCore () {
 		        return result;
 		    });
 		}
-		exports.group = group;
+		exports$1.group = group;
 		//-----------------------------------------------------------------------
 		// Wrapper action state
 		//-----------------------------------------------------------------------
@@ -27207,7 +27207,7 @@ function requireCore () {
 		    }
 		    (0, command_1.issueCommand)('save-state', { name }, (0, utils_1.toCommandValue)(value));
 		}
-		exports.saveState = saveState;
+		exports$1.saveState = saveState;
 		/**
 		 * Gets the value of an state set by this action's main execution.
 		 *
@@ -27217,34 +27217,34 @@ function requireCore () {
 		function getState(name) {
 		    return process.env[`STATE_${name}`] || '';
 		}
-		exports.getState = getState;
+		exports$1.getState = getState;
 		function getIDToken(aud) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        return yield oidc_utils_1.OidcClient.getIDToken(aud);
 		    });
 		}
-		exports.getIDToken = getIDToken;
+		exports$1.getIDToken = getIDToken;
 		/**
 		 * Summary exports
 		 */
 		var summary_1 = requireSummary();
-		Object.defineProperty(exports, "summary", { enumerable: true, get: function () { return summary_1.summary; } });
+		Object.defineProperty(exports$1, "summary", { enumerable: true, get: function () { return summary_1.summary; } });
 		/**
 		 * @deprecated use core.summary
 		 */
 		var summary_2 = requireSummary();
-		Object.defineProperty(exports, "markdownSummary", { enumerable: true, get: function () { return summary_2.markdownSummary; } });
+		Object.defineProperty(exports$1, "markdownSummary", { enumerable: true, get: function () { return summary_2.markdownSummary; } });
 		/**
 		 * Path exports
 		 */
 		var path_utils_1 = requirePathUtils();
-		Object.defineProperty(exports, "toPosixPath", { enumerable: true, get: function () { return path_utils_1.toPosixPath; } });
-		Object.defineProperty(exports, "toWin32Path", { enumerable: true, get: function () { return path_utils_1.toWin32Path; } });
-		Object.defineProperty(exports, "toPlatformPath", { enumerable: true, get: function () { return path_utils_1.toPlatformPath; } });
+		Object.defineProperty(exports$1, "toPosixPath", { enumerable: true, get: function () { return path_utils_1.toPosixPath; } });
+		Object.defineProperty(exports$1, "toWin32Path", { enumerable: true, get: function () { return path_utils_1.toWin32Path; } });
+		Object.defineProperty(exports$1, "toPlatformPath", { enumerable: true, get: function () { return path_utils_1.toPlatformPath; } });
 		/**
 		 * Platform utilities exports
 		 */
-		exports.platform = __importStar(requirePlatform());
+		exports$1.platform = __importStar(requirePlatform());
 		
 	} (core));
 	return core;
@@ -33196,58 +33196,58 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 function __awaiter(thisArg, _arguments, P, generator) {
-  function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-  return new (P || (P = Promise))(function (resolve, reject) {
-      function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-      function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-      function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 }
 
 function __generator(thisArg, body) {
-  var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-  return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-  function verb(n) { return function (v) { return step([n, v]); }; }
-  function step(op) {
-      if (f) throw new TypeError("Generator is already executing.");
-      while (g && (g = 0, op[0] && (_ = 0)), _) try {
-          if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-          if (y = 0, t) op = [op[0] & 2, t.value];
-          switch (op[0]) {
-              case 0: case 1: t = op; break;
-              case 4: _.label++; return { value: op[1], done: false };
-              case 5: _.label++; y = op[1]; op = [0]; continue;
-              case 7: op = _.ops.pop(); _.trys.pop(); continue;
-              default:
-                  if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                  if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                  if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                  if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                  if (t[2]) _.ops.pop();
-                  _.trys.pop(); continue;
-          }
-          op = body.call(thisArg, _);
-      } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-      if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-  }
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
 }
 
 function __values(o) {
-  var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-  if (m) return m.call(o);
-  if (o && typeof o.length === "number") return {
-      next: function () {
-          if (o && i >= o.length) o = void 0;
-          return { value: o && o[i++], done: !o };
-      }
-  };
-  throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 }
 
 typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
-  var e = new Error(message);
-  return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
 const fromString = (input, encoding) => {
@@ -35817,7 +35817,6 @@ const getSSOTokenFilepath = (id) => {
     return join(getHomeDir(), ".aws", "sso", "cache", `${cacheName}.json`);
 };
 
-const { readFile: readFile$1 } = promises;
 const tokenIntercept = {};
 const getSSOTokenFromFile = async (id) => {
     if (tokenIntercept[id]) {
@@ -35904,17 +35903,16 @@ const parseIni = (iniData) => {
     return map;
 };
 
-const { readFile } = promises;
-const filePromisesHash = {};
+const filePromises = {};
 const fileIntercept = {};
-const slurpFile = (path, options) => {
+const readFile = (path, options) => {
     if (fileIntercept[path] !== undefined) {
         return fileIntercept[path];
     }
-    if (!filePromisesHash[path] || options?.ignoreCache) {
-        filePromisesHash[path] = readFile(path, "utf8");
+    if (!filePromises[path] || options?.ignoreCache) {
+        filePromises[path] = readFile$2(path, "utf8");
     }
-    return filePromisesHash[path];
+    return filePromises[path];
 };
 
 const swallowError$1 = () => ({});
@@ -35931,13 +35929,13 @@ const loadSharedConfigFiles = async (init = {}) => {
         resolvedConfigFilepath = join(homeDir, configFilepath.slice(2));
     }
     const parsedFiles = await Promise.all([
-        slurpFile(resolvedConfigFilepath, {
+        readFile(resolvedConfigFilepath, {
             ignoreCache: init.ignoreCache,
         })
             .then(parseIni)
             .then(getConfigData)
             .catch(swallowError$1),
-        slurpFile(resolvedFilepath, {
+        readFile(resolvedFilepath, {
             ignoreCache: init.ignoreCache,
         })
             .then(parseIni)
@@ -35954,7 +35952,7 @@ const getSsoSessionData = (data) => Object.entries(data)
     .reduce((acc, [key, value]) => ({ ...acc, [key.substring(key.indexOf(CONFIG_PREFIX_SEPARATOR) + 1)]: value }), {});
 
 const swallowError = () => ({});
-const loadSsoSessionData = async (init = {}) => slurpFile(init.configFilepath ?? getConfigFilepath())
+const loadSsoSessionData = async (init = {}) => readFile(init.configFilepath ?? getConfigFilepath())
     .then(parseIni)
     .then(getSsoSessionData)
     .catch(swallowError);
@@ -37760,7 +37758,7 @@ class CreateSessionCommand extends Command
     .build() {
 }
 
-var version$2 = "3.926.0";
+var version$2 = "3.928.0";
 var packageInfo$2 = {
 	version: version$2};
 
@@ -39035,287 +39033,233 @@ class PutObjectCommand extends Command
  * Check if an S3 object exists
  */
 const checkS3ObjectExists = async (buildPath, _client, _bucket, _prefix, subPath) => {
-  // it's too slow to talk to s3, so just check the local files we just uploaded...
-  return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
+    // it's too slow to talk to s3, so just check the local files we just uploaded...
+    return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
 };
-
 /**
- * 
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {string} subPath 
- * @param {Record<string, string>} metadata 
- * @returns {Promise<{ copied: boolean, subPath: string, error?: S3ServiceException}>}
+ * Copy an object to itself while replacing the metadata.
  */
 const copyS3ObjectWithMetadataAsync = async (client, bucket, prefix, subPath, metadata) => {
-  const copied = true;
-  const fullPath = `${prefix}/${subPath}`;
-  const command = new CopyObjectCommand({
-    Bucket: bucket,
-    CopySource: `${bucket}/${fullPath}`,
-    Key: fullPath,
-    MetadataDirective: 'REPLACE',
-    ContentType: 'text/html',
-    Metadata: metadata
-  });
-  try {
-    await client.send(command);
-    return { copied, subPath };
-  } catch (error) {
-    if (error instanceof S3ServiceException) {
-      return { copied, subPath, error };
-    } else {
-      throw error;
+    const copied = true;
+    const fullPath = `${prefix}/${subPath}`;
+    const command = new CopyObjectCommand({
+        Bucket: bucket,
+        CopySource: `${bucket}/${fullPath}`,
+        Key: fullPath,
+        MetadataDirective: 'REPLACE',
+        ContentType: 'text/html',
+        Metadata: metadata
+    });
+    try {
+        await client.send(command);
+        return { copied, subPath };
     }
-  }
+    catch (error) {
+        if (error instanceof S3ServiceException) {
+            return { copied, subPath, error };
+        }
+        else {
+            throw error;
+        }
+    }
 };
-
 /**
- * 
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {string} subPath 
- * @param {Record<string, string>} metadata 
- * @returns {Promise<{ copied: boolean, subPath: string, error?: S3ServiceException}>}
+ * Create a object containing an HTML file with metadata.
  */
 const createNewS3ObjectAsync = async (client, bucket, prefix, subPath, metadata) => {
-  const copied = false;
-  const fullPath = `${prefix}/${subPath}`;
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: fullPath,
-    Body: '<!doctype html><title>?</title>',
-    ContentType: 'text/html',
-    Metadata: { ...metadata, 'redirect-failure': 'not-found' }
-  });
-  try {
-    await client.send(command);
-    return { copied, subPath };
-  } catch (error) {
-    if (error instanceof S3ServiceException) {
-      return { copied, subPath, error };
-    } else {
-      throw error;
+    const copied = false;
+    const fullPath = `${prefix}/${subPath}`;
+    const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: fullPath,
+        Body: '<!doctype html><title>?</title>',
+        ContentType: 'text/html',
+        Metadata: { ...metadata, 'redirect-failure': 'not-found' }
+    });
+    try {
+        await client.send(command);
+        return { copied, subPath };
     }
-  }
+    catch (error) {
+        if (error instanceof S3ServiceException) {
+            return { copied, subPath, error };
+        }
+        else {
+            throw error;
+        }
+    }
 };
-
 /**
- * 
- * @param {string} buildPath
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {string} subPath 
- * @param {Record<string, string>} metadata 
- * @returns 
+ * Setup an object with metadata.
  */
 const createOrUpdateS3ObjectAsync = async (buildPath, client, bucket, prefix, subPath, metadata) => {
-  // Check if object already exists
-  if (await checkS3ObjectExists(buildPath, client, bucket, prefix, subPath)) {
-    return copyS3ObjectWithMetadataAsync(client, bucket, prefix, subPath, metadata);
-  } else {
-    return createNewS3ObjectAsync(client, bucket, prefix, subPath, metadata);
-  }
+    // Check if object already exists
+    if (await checkS3ObjectExists(buildPath, client, bucket, prefix, subPath)) {
+        return copyS3ObjectWithMetadataAsync(client, bucket, prefix, subPath, metadata);
+    }
+    else {
+        return createNewS3ObjectAsync(client, bucket, prefix, subPath, metadata);
+    }
 };
-
 /**
- * Important: do not make this an async generator as that means it can only 
- * produce one value at a time. It must instead be a normal generator that 
+ * Important: do not make this an async generator as that means it can only
+ * produce one value at a time. It must instead be a normal generator that
  * returns promises.
- * 
- * @param {string} buildPath
- * @param {S3Client} client 
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {Map<string, string>} redirectsByLocation 
  */
 function* generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redirectsByLocation) {
-  for (const [location, locationRedirects] of redirectsByLocation) {
-    // Create S3 object path by appending index.html to location
-    const locationIndexHtml = location.endsWith('/')
-      ? `${location}index.html`
-      : `${location}/index.html`;
-
-    // Remove leading slash from location
-    const subPath = locationIndexHtml.startsWith('/') ? locationIndexHtml.slice(1) : locationIndexHtml;
-
-    // Build metadata headers
-    const metadata = {};
-
-    locationRedirects.forEach((redirect, index) => {
-      const i = index + 1; // 1-based indexing as requested
-
-      // Add redirect location header
-      metadata[`redirect-location-${i}`] = redirect.redirect;
-
-      // Add pattern header if it exists
-      if (redirect.pattern !== undefined) {
-        metadata[`redirect-pattern-${i}`] = redirect.pattern;
-      }
-    });
-
-    // Create or update the S3 object
-    yield createOrUpdateS3ObjectAsync(buildPath, client, bucket, prefix, subPath, metadata);
-  }
+    for (const [location, locationRedirects] of redirectsByLocation) {
+        // Create S3 object path by appending index.html to location
+        const locationIndexHtml = location.endsWith('/')
+            ? `${location}index.html`
+            : `${location}/index.html`;
+        // Remove leading slash from location
+        const subPath = locationIndexHtml.startsWith('/') ? locationIndexHtml.slice(1) : locationIndexHtml;
+        // Build metadata headers
+        const metadata = {};
+        locationRedirects.forEach((redirect, index) => {
+            const i = index + 1; // 1-based indexing as requested
+            // Add redirect location header
+            metadata[`redirect-location-${i}`] = redirect.redirect;
+            // Add pattern header if it exists
+            if (redirect.pattern !== undefined) {
+                metadata[`redirect-pattern-${i}`] = redirect.pattern;
+            }
+        });
+        // Create or update the S3 object
+        yield createOrUpdateS3ObjectAsync(buildPath, client, bucket, prefix, subPath, metadata);
+    }
 }
-
 /**
  * This takes in a normal generator that returns promises and returns an async
  * generator that runs `max` of those promises in parallel to improve throughput.
- * @template T
- * @param {number} max 
- * @param {Generator<Promise<T>, void, unknown>} source 
- * @returns {AsyncGenerator<T, void, unknown>}
  */
 async function* parallelGenerator(max, source) {
-  /**
-   * @param {number} i
-   * @param {IteratorResult<Promise<T>, void>} task 
-   * @returns {Promise<[number, IteratorResult<T>]>}
-   */
-  const wrap = (i, task) => new Promise((resolve) => {
-    if (task.done) {
-      resolve([i, { done: true }]);
-    } else {
-      task.value.then((v) => resolve([i, { done: false, value: v }]));
+    const wrap = (i, task) => new Promise((resolve) => {
+        if (task.done) {
+            resolve([i, { done: true, value: undefined }]);
+        }
+        else {
+            task.value.then((v) => resolve([i, { done: false, value: v }]));
+        }
+    });
+    let tasks = [];
+    for (let i = 0; i < max; i++) {
+        tasks.push(wrap(i, source.next()));
     }
-  });
-  /** @type {(Promise<[number, IteratorResult<T, void>]>)[]} */
-  let tasks = [];
-  for (let i = 0; i < max; i++) {
-    tasks.push(wrap(i, source.next()));
-  }
-  /** @type {(Promise<[number, IteratorResult<T, void>]> | null)[]} */
-  let tasksAndNull;
-  while (true) {
-    const [i, v] = await Promise.race(tasks);
-    if (v.done) {
-      // move the tasks over to the nullable list
-      tasksAndNull = tasks.splice(0, tasks.length);
-      tasksAndNull[i] = null;
-      break;
-    } else {
-      tasks[i] = wrap(i, source.next());
-      yield v.value;
+    let tasksAndNull;
+    while (true) {
+        const [i, v] = await Promise.race(tasks);
+        if (v.done) {
+            // move the tasks over to the nullable list
+            tasksAndNull = tasks.splice(0, tasks.length);
+            tasksAndNull[i] = null;
+            break;
+        }
+        else {
+            tasks[i] = wrap(i, source.next());
+            yield v.value;
+        }
     }
-  }
-  let filteredTasks = tasksAndNull.filter((v) => v !== null);
-  while (filteredTasks.length > 0) {
-    const [i, v] = await Promise.race(filteredTasks);
-    tasksAndNull[i] = null;
-    if (!v.done) {
-      yield v.value;
+    let filteredTasks = tasksAndNull.filter((v) => v !== null);
+    while (filteredTasks.length > 0) {
+        const [i, v] = await Promise.race(filteredTasks);
+        tasksAndNull[i] = null;
+        if (!v.done) {
+            yield v.value;
+        }
+        filteredTasks = tasksAndNull.filter((v) => v !== null);
     }
-    filteredTasks = tasksAndNull.filter((v) => v !== null);
-  }
 }
-
 /**
- *  
- * @param {string} buildPath
- * @param {string} bucket 
- * @param {string} prefix 
- * @param {number} parallel
- * @param {{location: string, pattern?: string, redirect: string}[]} redirects
+ * Make objects representing all the redirects.
  */
 const makeRedirectObjects = async (buildPath, bucket, prefix, parallel, redirects) => {
-  let errorCount = 0;
-  // Group redirects by location to handle multiple redirects for the same location
-  /** @type {Map<string, {location: string, pattern?: string, redirect: string}[]>} */
-  const redirectsByLocation = new Map();
-
-  redirects.forEach((redirect) => {
-    const location = redirect.location;
-    if (!redirectsByLocation.has(location)) {
-      redirectsByLocation.set(location, []);
+    let errorCount = 0;
+    // Group redirects by location to handle multiple redirects for the same location
+    const redirectsByLocation = new Map();
+    redirects.forEach((redirect) => {
+        const location = redirect.location;
+        if (!redirectsByLocation.has(location)) {
+            redirectsByLocation.set(location, []);
+        }
+        redirectsByLocation.get(location)?.push(redirect);
+    });
+    const client = new S3Client({});
+    const tasks = parallelGenerator(parallel, generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redirectsByLocation));
+    let processedCount = 0;
+    for await (const taskResult of tasks) {
+        const { subPath, error, copied } = taskResult;
+        processedCount++;
+        coreExports.info(`Processed ${((processedCount / redirectsByLocation.size) * 100).toFixed(1)}%: ${subPath}`);
+        if (error) {
+            errorCount++;
+            coreExports.error(`Error ${copied ? 'Updating' : 'Creating'} S3 object ${prefix}/${subPath}: ${error.message}`);
+        }
     }
-    redirectsByLocation.get(location).push(redirect);
-  });
-
-  const client = new S3Client({});
-
-  const tasks = parallelGenerator(parallel, generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redirectsByLocation));
-  let processedCount = 0;
-  for await (const taskResult of tasks) {
-    const { subPath, error, copied } = taskResult;
-    processedCount++;
-    coreExports.info(`Processed ${((processedCount / redirectsByLocation.size) * 100).toFixed(1)}%: ${taskResult.subPath}`);
-    if (error) {
-      errorCount++;
-      coreExports.error(`Error ${copied ? 'Updating' : 'Creating'} S3 object ${prefix}/${subPath}: ${error.message}`);
-    }
-  }
-  coreExports.info(`Finished with ${errorCount} error(s)`);
+    coreExports.info(`Finished with ${errorCount} error(s)`);
 };
-
+/**
+ * Get inputs from github and create redirects.
+ */
 const main = async () => {
-  const buildPath = coreExports.getInput('build');
-  coreExports.debug(`Got input build "${buildPath}" which resolves to "${path.resolve(buildPath)}"`);
-
-  const redirectsSource = coreExports.getInput('redirects');
-  coreExports.debug(`Got input redirects "${redirectsSource}"`);
-
-  /**
-   * @type {{location: string, pattern?: string, redirect: string}[]}
-   */
-  const redirects = await (async () => {
-    if (redirectsSource.startsWith('https://')) {
-    const response = await fetch(redirectsSource);
-      if (!response.ok) {
-        throw new Error('Unable to fetch ' + redirectsSource);
-      }
-      return response.json();
-    } else {
-      return JSON.parse(await fs.readFile(redirectsSource, 'utf-8'));
+    const buildPath = coreExports.getInput('build');
+    coreExports.debug(`Got input build "${buildPath}" which resolves to "${path.resolve(buildPath)}"`);
+    const redirectsSource = coreExports.getInput('redirects');
+    coreExports.debug(`Got input redirects "${redirectsSource}"`);
+    const redirects = await (async () => {
+        if (redirectsSource.startsWith('https://')) {
+            const response = await fetch(redirectsSource);
+            if (!response.ok) {
+                throw new Error('Unable to fetch ' + redirectsSource);
+            }
+            return response.json();
+        }
+        else {
+            return JSON.parse(await fs.readFile(redirectsSource, 'utf-8'));
+        }
+    })();
+    if (!(Array.isArray(redirects) && redirects.every((v) => (typeof v === 'object' && typeof v.location === 'string' &&
+        typeof v.redirect === 'string' &&
+        (typeof v.pattern === 'undefined' || typeof v.pattern === 'string'))))) {
+        throw new Error(`Invalid redirects data`);
     }
-  })();
-  if (!(Array.isArray(redirects) && redirects.every((v) => (
-    typeof v === 'object' && typeof v.location === 'string' && 
-    typeof v.redirect === 'string' && 
-    (typeof v.pattern === 'undefined' || typeof v.pattern === 'string')
-  )))) {
-    throw new Error(`Invalid redirects data`);
-  }
-
-  const bucket = coreExports.getInput('bucket');
-  coreExports.debug(`Got input bucket "${bucket}"`);
-  if (!/^[a-z0-9][a-z0-9\.-]{1,61}[a-z0-9]$/.test(bucket) ||
-    /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
-    /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
-    /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
-    /--x-s3$/.test(bucket) || /--table-s3$/.test(bucket)) {
-    throw new Error(`Invalid bucket name, got ${bucket}`);
-  }
-
-  const prefix = coreExports.getInput('prefix');
-  coreExports.debug(`Got input prefix "${prefix}"`);
-  if (!/^[a-z0-9\.-]+(\/[a-z0-9\.-]+)*$/.test(prefix)) {
-    throw new Error(`Invalid prefix, got ${prefix}`);
-  }
-
-  const parallel = parseInt(coreExports.getInput('parallel'), 10);
-  coreExports.debug(`Got input parallel ${parallel}`);
-  if (Number.isNaN(parallel)) {
-    throw new Error(`Invalid integer value for parallel, got ${coreExports.getInput('parallel')}`);
-  }
-
-  await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
+    const bucket = coreExports.getInput('bucket');
+    coreExports.debug(`Got input bucket "${bucket}"`);
+    if (!/^[a-z0-9][a-z0-9\.-]{1,61}[a-z0-9]$/.test(bucket) ||
+        /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
+        /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
+        /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
+        /--x-s3$/.test(bucket) || /--table-s3$/.test(bucket)) {
+        throw new Error(`Invalid bucket name, got ${bucket}`);
+    }
+    const prefix = coreExports.getInput('prefix');
+    coreExports.debug(`Got input prefix "${prefix}"`);
+    if (!/^[a-z0-9\.-]+(\/[a-z0-9\.-]+)*$/.test(prefix)) {
+        throw new Error(`Invalid prefix, got ${prefix}`);
+    }
+    const parallel = parseInt(coreExports.getInput('parallel'), 10);
+    coreExports.debug(`Got input parallel ${parallel}`);
+    if (Number.isNaN(parallel)) {
+        throw new Error(`Invalid integer value for parallel, got ${coreExports.getInput('parallel')}`);
+    }
+    await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
 };
-
+/**
+ * Run the action and report errors.
+ */
 const run = async () => {
-  coreExports.debug('Starting tinymce-docs-generate-redirects-action');
-  try {
-    await main();
-  } catch (err) {
-    if (typeof err === 'string' || err instanceof Error) {
-      coreExports.setFailed(err);
-    } else {
-      coreExports.setFailed(err !== undefined ? String(err) : 'unknown error');
+    coreExports.debug('Starting tinymce-docs-generate-redirects-action');
+    try {
+        await main();
     }
-  }
+    catch (err) {
+        if (typeof err === 'string' || err instanceof Error) {
+            coreExports.setFailed(err);
+        }
+        else {
+            coreExports.setFailed(err !== undefined ? String(err) : 'unknown error');
+        }
+    }
 };
 
 run();
@@ -40570,7 +40514,7 @@ const commonParams$2 = {
     UseDualStack: { type: "builtInParams", name: "useDualstackEndpoint" },
 };
 
-var version$1 = "3.926.0";
+var version$1 = "3.928.0";
 var packageInfo$1 = {
 	version: version$1};
 
@@ -41301,7 +41245,7 @@ const commonParams$1 = {
     UseDualStack: { type: "builtInParams", name: "useDualstackEndpoint" },
 };
 
-var version = "3.926.0";
+var version = "3.928.0";
 var packageInfo = {
 	version: version};
 
