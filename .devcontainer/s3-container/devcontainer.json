@@ -1,9 +1,0 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.241.1/containers/alpine
-{
-	"name": "S3 Container",
-	"dockerComposeFile": ["../docker-compose.yml"],
-  "service": "s3",
-  "shutdownAction": "stopCompose",
-  "workspaceFolder": "/workspace"
-}
