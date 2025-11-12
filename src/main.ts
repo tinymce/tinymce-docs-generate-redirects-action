@@ -185,7 +185,7 @@ const makeRedirectObjects = async (buildPath: string, bucket: string, prefix: st
     redirectsByLocation.get(location)?.push(redirect);
   });
 
-  const client = new S3Client({});
+  const client = new S3Client({ forcePathStyle: true });
 
   const tasks = parallelGenerator(parallel, generateRedirectObjectsAsync(buildPath, client, bucket, prefix, redirectsByLocation));
   let processedCount = 0;
