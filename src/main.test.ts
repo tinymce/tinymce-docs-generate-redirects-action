@@ -147,6 +147,9 @@ const OUTPUT_3_META = {
 const s3client = new S3Client({ forcePathStyle: true });
 
 beforeAll(async () => {
+  if (process.env.AWS_ENDPOINT_URL !== 'http://s3:9000') {
+    throw new Error('Warning: the tests must be run inside the devcontainer!');
+  }
   await createBucket(s3client, BUCKET_NAME);
 });
 
