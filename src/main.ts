@@ -8,6 +8,8 @@ import {
   S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
+import { isRedirect, isValidGeneralPurposeBucketName, isValidPrefix, Redirect } from './validation.js';
+import { isReadableDirectory, loadJSON } from './io.js';
 
 interface S3Operation {
   copied: boolean;
@@ -15,16 +17,10 @@ interface S3Operation {
   error?: S3ServiceException;
 }
 
-interface Redirect {
-  location: string;
-  pattern?: string;
-  redirect: string;
-}
-
 /**
- * Check if an S3 object exists
+ * Check if an S3 object is likely to exist based on previously uploaded files
  */
-const checkS3ObjectExists = async (buildPath: string, _client: S3Client, _bucket: string, _prefix: string, subPath: string): Promise<boolean> => {
+const checkS3ObjectExpectedToExist = async (buildPath: string, subPath: string): Promise<boolean> => {
   // it's too slow to talk to s3, so just check the local files we just uploaded...
   return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
 };
@@ -104,7 +100,7 @@ const createOrUpdateS3ObjectAsync = async (
   metadata: Record<string, string>
 ): Promise<S3Operation> => {
   // Check if object already exists
-  if (await checkS3ObjectExists(buildPath, client, bucket, prefix, subPath)) {
+  if (await checkS3ObjectExpectedToExist(buildPath, subPath)) {
     return copyS3ObjectWithMetadataAsync(client, bucket, prefix, subPath, metadata);
   } else {
     return createNewS3ObjectAsync(client, bucket, prefix, subPath, metadata);
@@ -224,56 +220,63 @@ const makeRedirectObjects = async (buildPath: string, bucket: string, prefix: st
   core.info(`Finished with ${errorCount} error(s)`);
 };
 
+/** Get the build input */
+const inputBuild = async () => {
+  const buildPath = core.getInput('build');
+  if (!await isReadableDirectory(buildPath)) {
+    throw new Error(`Input build ${buildPath} is not a readable directory.`);
+  }
+  return buildPath;
+};
+
+/** Get the redirects input */
+const inputRedirects = async () => {
+  const redirectsSource = core.getInput('redirects');
+
+  const redirects = await loadJSON(redirectsSource);
+  if (!(Array.isArray(redirects) && redirects.every(isRedirect))) {
+    throw new Error(`Invalid redirects data`);
+  }
+  return redirects;
+};
+
+/** Get the bucket input */
+const inputBucket = () => {
+  const bucket = core.getInput('bucket');
+  if (!isValidGeneralPurposeBucketName(bucket)) {
+    throw new Error(`Invalid bucket name, got ${bucket}`);
+  }
+  return bucket;
+};
+
+/** Get the prefix input */
+const inputPrefix = () => {
+  const prefix = core.getInput('prefix');
+  if (!isValidPrefix(prefix)) {
+    throw new Error(`Invalid prefix, got ${prefix}`);
+  }
+  return prefix;
+};
+
+/** Get the parallel input */
+const inputParallel = () => {
+  const parallel = parseInt(core.getInput('parallel'), 10);
+  if (Number.isNaN(parallel)) {
+    throw new Error(`Invalid integer value for parallel, got ${core.getInput('parallel')}`);
+  }
+  return parallel;
+};
+
 /**
  * Get inputs from github and create redirects.
  */
 const main = async (): Promise<void> => {
-  const buildPath = core.getInput('build');
-  core.debug(`Got input build "${buildPath}" which resolves to "${path.resolve(buildPath)}"`);
 
-  const redirectsSource = core.getInput('redirects');
-  core.debug(`Got input redirects "${redirectsSource}"`);
-
-  const redirects: Redirect[] = await (async () => {
-    if (redirectsSource.startsWith('https://')) {
-      const response = await fetch(redirectsSource);
-      if (!response.ok) {
-        throw new Error('Unable to fetch ' + redirectsSource);
-      }
-      return response.json();
-    } else {
-      return JSON.parse(await fs.readFile(redirectsSource, 'utf-8'));
-    }
-  })();
-  if (!(Array.isArray(redirects) && redirects.every((v) => (
-    typeof v === 'object' && typeof v.location === 'string' &&
-    typeof v.redirect === 'string' &&
-    (typeof v.pattern === 'undefined' || typeof v.pattern === 'string')
-  )))) {
-    throw new Error(`Invalid redirects data`);
-  }
-
-  const bucket = core.getInput('bucket');
-  core.debug(`Got input bucket "${bucket}"`);
-  if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(bucket) ||
-    /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
-    /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
-    /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
-    /--x-s3$/.test(bucket) || /--table-s3$/.test(bucket)) {
-    throw new Error(`Invalid bucket name, got ${bucket}`);
-  }
-
-  const prefix = core.getInput('prefix');
-  core.debug(`Got input prefix "${prefix}"`);
-  if (!/^[a-z0-9.-]+(\/[a-z0-9.-]+)*$/.test(prefix)) {
-    throw new Error(`Invalid prefix, got ${prefix}`);
-  }
-
-  const parallel = parseInt(core.getInput('parallel'), 10);
-  core.debug(`Got input parallel ${parallel}`);
-  if (Number.isNaN(parallel)) {
-    throw new Error(`Invalid integer value for parallel, got ${core.getInput('parallel')}`);
-  }
+  const buildPath = await inputBuild();
+  const bucket = inputBucket();
+  const prefix = inputPrefix();
+  const parallel = inputParallel();
+  const redirects = await inputRedirects();
 
   await makeRedirectObjects(buildPath, bucket, prefix, parallel, redirects);
 };
