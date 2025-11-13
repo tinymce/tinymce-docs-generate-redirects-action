@@ -110,7 +110,7 @@ const getContent = async (client: S3Client, bucket: string, prefix: string, subp
   return data.Body?.transformToString('utf-8') ?? '';
 };
 
-const inputContent = (p: string) => readFile(path.join(__dirname, '../test-data/build-sample', p), 'utf-8');
+const inputContent = (p: string) => readFile(path.join(import.meta.dirname, '../test-data/build-sample', p), 'utf-8');
 
 // names
 const BUCKET_NAME = 'tinymce-docs-generate-redirects-action';
@@ -155,7 +155,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await emptyBucket(BUCKET_NAME);
-  await syncBucket(BUCKET_NAME, PREFIX, path.join(__dirname, '../test-data/build-sample'));
+  await syncBucket(BUCKET_NAME, PREFIX, path.join(import.meta.dirname, '../test-data/build-sample'));
 });
 
 test('files are as expected before running action', async () => {
