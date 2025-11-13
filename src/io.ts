@@ -22,8 +22,11 @@ export const loadJSON = async (source: string): Promise<unknown> => {
       return JSON.parse(await fs.readFile(source, 'utf-8'));
     }
   } catch (err) {
-    if (err instanceof Error) {
-      throw new Error(`Unable to load JSON from "${source}": ` + err.message);
+    // Check for error-like object (more reliable than instanceof in ES modules)
+    if (typeof err === 'object' && err !== null && 'message' in err) {
+      throw new Error(`Unable to load JSON from "${source}": ` + (err as Error).message);
+    } else {
+      throw err;
     }
   }
 };
