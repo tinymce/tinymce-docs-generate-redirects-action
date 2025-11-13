@@ -1,0 +1,28 @@
+name: TinyMCE Docs Generate Redirects
+description: Create s3 index.html objects that represent redirects with headers.
+
+inputs:
+  build:
+    description: Path to build directory that contains the original files
+    required: true
+
+  redirects:
+    description: Path or URL to JSON file containing redirects.
+    required: true
+
+  bucket:
+    description: Target bucket
+    required: true
+  
+  prefix:
+    description: The prefix within the target bucket to put the redirects.
+    required: true
+
+  parallel:
+    description: The number of parallel uploads.
+    required: false
+    default: 5
+
+runs:
+  using: node24 # node22 is not supported
+  main: dist/index.js

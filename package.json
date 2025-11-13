@@ -1,0 +1,42 @@
+{
+  "name": "tinymce-docs-generate-redirects-action",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "keywords": [],
+  "author": "Tiny Technologies Inc.",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@aws-sdk/client-s3": "^3.926.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@github/local-action": "^6.0.2",
+    "@jest/globals": "^30.2.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@stylistic/eslint-plugin": "^5.5.0",
+    "@tinymce/eslint-plugin": "^3.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22",
+    "eslint": "^9.39.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-mocha": "^11.2.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "jest": "^30.2.0",
+    "rollup": "^4.52.5",
+    "ts-jest": "^29.4.5",
+    "ts-jest-resolver": "^2.0.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4"
+  },
+  "repository": "git@github.com:tinymce/tinymce-docs-generate-redirects-action.git",
+  "type": "module"
+}
