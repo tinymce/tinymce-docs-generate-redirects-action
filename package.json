@@ -37,5 +37,6 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4"
   },
-  "repository": "git@github.com:tinymce/tinymce-docs-generate-redirects-action.git"
+  "repository": "git@github.com:tinymce/tinymce-docs-generate-redirects-action.git",
+  "type": "module"
 }
