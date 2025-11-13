@@ -65,6 +65,7 @@ yarn build
 
 ### Release
 
+0. Run `yarn tsc`, `yarn eslint` and `yarn test` to check the build.
 1. Bump `package.json` version.
 2. Build outputs with `yarn build` and commit.
 3. Tag commit with `git tag -a v1.0 -m "Release 1.0"`

@@ -1,9 +1,9 @@
-import { expect, test, beforeAll, beforeEach } from '@jest/globals';
-import { S3Client, CreateBucketCommand, BucketAlreadyOwnedByYou, GetObjectCommand, HeadObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
 
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { S3Client, CreateBucketCommand, BucketAlreadyOwnedByYou, GetObjectCommand, HeadObjectCommand, S3ServiceException } from '@aws-sdk/client-s3';
+import { expect, test, beforeAll, beforeEach } from '@jest/globals';
 
 interface SpawnAsyncResult {
   cmd: string[];
@@ -15,7 +15,7 @@ interface SpawnAsyncResult {
 };
 
 const spawnAsync = (cmd: string[]) => new Promise<SpawnAsyncResult>((resolve) => {
-  const p = spawn(cmd[0], cmd.slice(1), { stdio: ['inherit', 'pipe', 'pipe'] });
+  const p = spawn(cmd[0], cmd.slice(1), { stdio: [ 'inherit', 'pipe', 'pipe' ] });
   p.stdout.setEncoding('utf-8');
   let out = '';
   let err = '';
@@ -32,7 +32,7 @@ const spawnAsync = (cmd: string[]) => new Promise<SpawnAsyncResult>((resolve) =>
       stdout: out,
       stderr: err,
       status: code,
-      signal: signal,
+      signal,
       ...(failed ? { error: new Error(err) } : {}),
     };
     resolve(data);
@@ -54,21 +54,21 @@ const createBucket = async (client: S3Client, bucket: string) => {
 };
 
 const emptyBucket = async (bucket: string) => {
-  const result = await spawnAsync(['aws', 's3', 'rm', '--recursive', `s3://${bucket}`]);
+  const result = await spawnAsync([ 'aws', 's3', 'rm', '--recursive', `s3://${bucket}` ]);
   if (result.error !== undefined) {
     throw result.error;
   }
 };
 
 const syncBucket = async (bucket: string, prefix: string, source: string) => {
-  const result = await spawnAsync(['aws', 's3', 'sync', source, `s3://${bucket}/${prefix}`]);
+  const result = await spawnAsync([ 'aws', 's3', 'sync', source, `s3://${bucket}/${prefix}` ]);
   if (result.error !== undefined) {
     throw result.error;
   }
 };
 
 const runAction = async () => {
-  const result = await spawnAsync(['npx', '@github/local-action', '/workspace', 'src/main.ts', 'test-data/.env']);
+  const result = await spawnAsync([ 'npx', '@github/local-action', '/workspace', 'src/main.ts', 'test-data/.env' ]);
   if (result.error !== undefined) {
     throw result.error;
   }
@@ -124,30 +124,30 @@ const OUTPUT_1 = 'index.html';
 const OUTPUT_2 = 'docs-4x/index.html';
 const OUTPUT_3 = 'docs/tinymce/8/index.html';
 const INPUT_1_META = {
-  "redirect-location-1": "/docs/tinymce/latest/"
+  'redirect-location-1': '/docs/tinymce/latest/'
 };
 const OUTPUT_1_META = {
-  "redirect-failure": "not-found",
-  "redirect-location-1": "/docs%1",
-  "redirect-location-2": "/docs%1",
-  "redirect-pattern-1": "^/docs%-beta(.*)$",
-  "redirect-pattern-2": "^/docs%-preview(.*)$",
+  'redirect-failure': 'not-found',
+  'redirect-location-1': '/docs%1',
+  'redirect-location-2': '/docs%1',
+  'redirect-pattern-1': '^/docs%-beta(.*)$',
+  'redirect-pattern-2': '^/docs%-preview(.*)$',
 };
 const OUTPUT_2_META = {
-  "redirect-failure": "not-found",
-  "redirect-location-1": "/docs/tinymce/latest/",
+  'redirect-failure': 'not-found',
+  'redirect-location-1': '/docs/tinymce/latest/',
 };
 const OUTPUT_3_META = {
-  "redirect-failure": "not-found",
-  "redirect-location-1": "/docs/tinymce/latest/%1",
-  "redirect-pattern-1": "^/docs/tinymce/8/(.*)$",
+  'redirect-failure': 'not-found',
+  'redirect-location-1': '/docs/tinymce/latest/%1',
+  'redirect-pattern-1': '^/docs/tinymce/8/(.*)$',
 };
 
 // client
-const client = new S3Client({ forcePathStyle: true });
+const s3client = new S3Client({ forcePathStyle: true });
 
 beforeAll(async () => {
-  await createBucket(client, BUCKET_NAME);
+  await createBucket(s3client, BUCKET_NAME);
 });
 
 beforeEach(async () => {
@@ -156,39 +156,39 @@ beforeEach(async () => {
 });
 
 test('files are as expected before running action', async () => {
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, INPUT_1)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual({});
-  expect(await getContent(client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual(await inputContent(INPUT_1));
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, INPUT_1)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual({});
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual(await inputContent(INPUT_1));
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, INPUT_2)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual({});
-  expect(await getContent(client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual(await inputContent(INPUT_2));
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, INPUT_2)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual({});
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual(await inputContent(INPUT_2));
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, OUTPUT_1)).toBe(false);
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, OUTPUT_2)).toBe(false);
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, OUTPUT_3)).toBe(false);
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, OUTPUT_1)).toBe(false);
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, OUTPUT_2)).toBe(false);
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, OUTPUT_3)).toBe(false);
 });
 
 test('files are as expected after running action', async () => {
   await runAction();
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, INPUT_1)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual(INPUT_1_META);
-  expect(await getContent(client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual(await inputContent(INPUT_1));
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, INPUT_1)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual(INPUT_1_META);
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, INPUT_1)).toStrictEqual(await inputContent(INPUT_1));
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, INPUT_2)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual({});
-  expect(await getContent(client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual(await inputContent(INPUT_2));
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, INPUT_2)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual({});
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, INPUT_2)).toStrictEqual(await inputContent(INPUT_2));
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, OUTPUT_1)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, OUTPUT_1)).toStrictEqual(OUTPUT_1_META);
-  expect(await getContent(client, BUCKET_NAME, PREFIX, OUTPUT_1)).toStrictEqual(EMPTY_HTML);
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, OUTPUT_1)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, OUTPUT_1)).toStrictEqual(OUTPUT_1_META);
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, OUTPUT_1)).toStrictEqual(EMPTY_HTML);
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, OUTPUT_2)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, OUTPUT_2)).toStrictEqual(OUTPUT_2_META);
-  expect(await getContent(client, BUCKET_NAME, PREFIX, OUTPUT_2)).toStrictEqual(EMPTY_HTML);
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, OUTPUT_2)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, OUTPUT_2)).toStrictEqual(OUTPUT_2_META);
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, OUTPUT_2)).toStrictEqual(EMPTY_HTML);
 
-  expect(await existsInBucket(client, BUCKET_NAME, PREFIX, OUTPUT_3)).toBe(true);
-  expect(await getMetadata(client, BUCKET_NAME, PREFIX, OUTPUT_3)).toStrictEqual(OUTPUT_3_META);
-  expect(await getContent(client, BUCKET_NAME, PREFIX, OUTPUT_3)).toStrictEqual(EMPTY_HTML);
+  expect(await existsInBucket(s3client, BUCKET_NAME, PREFIX, OUTPUT_3)).toBe(true);
+  expect(await getMetadata(s3client, BUCKET_NAME, PREFIX, OUTPUT_3)).toStrictEqual(OUTPUT_3_META);
+  expect(await getContent(s3client, BUCKET_NAME, PREFIX, OUTPUT_3)).toStrictEqual(EMPTY_HTML);
 });

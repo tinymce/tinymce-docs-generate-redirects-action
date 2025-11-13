@@ -1,14 +1,13 @@
-import * as core from "@actions/core";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import * as core from '@actions/core';
 
 import {
   PutObjectCommand,
   CopyObjectCommand,
   S3Client,
   S3ServiceException,
-} from "@aws-sdk/client-s3";
-
-import fs from 'node:fs/promises';
-import path from 'node:path';
+} from '@aws-sdk/client-s3';
 
 interface S3Operation {
   copied: boolean;
@@ -28,12 +27,18 @@ interface Redirect {
 const checkS3ObjectExists = async (buildPath: string, _client: S3Client, _bucket: string, _prefix: string, subPath: string): Promise<boolean> => {
   // it's too slow to talk to s3, so just check the local files we just uploaded...
   return fs.access(path.join(buildPath, subPath), fs.constants.F_OK).then(() => true, () => false);
-}
+};
 
 /**
  * Copy an object to itself while replacing the metadata.
  */
-const copyS3ObjectWithMetadataAsync = async (client: S3Client, bucket: string, prefix: string, subPath: string, metadata: Record<string, string>): Promise<S3Operation> => {
+const copyS3ObjectWithMetadataAsync = async (
+  client: S3Client,
+  bucket: string,
+  prefix: string,
+  subPath: string,
+  metadata: Record<string, string>
+): Promise<S3Operation> => {
   const copied = true;
   const fullPath = `${prefix}/${subPath}`;
   const command = new CopyObjectCommand({
@@ -59,7 +64,13 @@ const copyS3ObjectWithMetadataAsync = async (client: S3Client, bucket: string, p
 /**
  * Create a object containing an HTML file with metadata.
  */
-const createNewS3ObjectAsync = async (client: S3Client, bucket: string, prefix: string, subPath: string, metadata: Record<string, string>): Promise<S3Operation> => {
+const createNewS3ObjectAsync = async (
+  client: S3Client,
+  bucket: string,
+  prefix: string,
+  subPath: string,
+  metadata: Record<string, string>
+): Promise<S3Operation> => {
   const copied = false;
   const fullPath = `${prefix}/${subPath}`;
   const command = new PutObjectCommand({
@@ -79,27 +90,40 @@ const createNewS3ObjectAsync = async (client: S3Client, bucket: string, prefix: 
       throw error;
     }
   }
-}
+};
 
 /**
  * Setup an object with metadata.
  */
-const createOrUpdateS3ObjectAsync = async (buildPath: string, client: S3Client, bucket: string, prefix: string, subPath: string, metadata: Record<string, string>): Promise<S3Operation> => {
+const createOrUpdateS3ObjectAsync = async (
+  buildPath: string,
+  client: S3Client,
+  bucket: string,
+  prefix: string,
+  subPath: string,
+  metadata: Record<string, string>
+): Promise<S3Operation> => {
   // Check if object already exists
   if (await checkS3ObjectExists(buildPath, client, bucket, prefix, subPath)) {
     return copyS3ObjectWithMetadataAsync(client, bucket, prefix, subPath, metadata);
   } else {
     return createNewS3ObjectAsync(client, bucket, prefix, subPath, metadata);
   }
-}
+};
 
 /**
- * Important: do not make this an async generator as that means it can only 
- * produce one value at a time. It must instead be a normal generator that 
+ * Important: do not make this an async generator as that means it can only
+ * produce one value at a time. It must instead be a normal generator that
  * returns promises.
  */
-function* generateRedirectObjectsAsync(buildPath: string, client: S3Client, bucket: string, prefix: string, redirectsByLocation: Map<string, Redirect[]>): Generator<Promise<S3Operation>, void, unknown> {
-  for (const [location, locationRedirects] of redirectsByLocation) {
+function* generateRedirectObjectsAsync(
+  buildPath: string,
+  client: S3Client,
+  bucket: string,
+  prefix: string,
+  redirectsByLocation: Map<string, Redirect[]>
+): Generator<Promise<S3Operation>, void, unknown> {
+  for (const [ location, locationRedirects ] of redirectsByLocation) {
     // Create S3 object path by appending index.html to location
     const locationIndexHtml = location.endsWith('/')
       ? `${location}index.html`
@@ -135,18 +159,18 @@ function* generateRedirectObjectsAsync(buildPath: string, client: S3Client, buck
 async function* parallelGenerator<T>(max: number, source: Generator<Promise<T>, void, unknown>): AsyncGenerator<T, void, unknown> {
   const wrap = (i: number, task: IteratorResult<Promise<T>, void>): Promise<[number, IteratorResult<T>]> => new Promise((resolve) => {
     if (task.done) {
-      resolve([i, { done: true, value: undefined }]);
+      resolve([ i, { done: true, value: undefined }]);
     } else {
-      task.value.then((v) => resolve([i, { done: false, value: v }]))
+      task.value.then((v) => resolve([ i, { done: false, value: v }]));
     }
-  })
-  let tasks: (Promise<[number, IteratorResult<T, void>]>)[] = [];
+  });
+  const tasks: (Promise<[number, IteratorResult<T, void>]>)[] = [];
   for (let i = 0; i < max; i++) {
-    tasks.push(wrap(i, source.next()))
+    tasks.push(wrap(i, source.next()));
   }
   let tasksAndNull: (Promise<[number, IteratorResult<T, void>]> | null)[];
   while (true) {
-    const [i, v] = await Promise.race(tasks);
+    const [ i, v ] = await Promise.race(tasks);
     if (v.done) {
       // move the tasks over to the nullable list
       tasksAndNull = tasks.splice(0, tasks.length);
@@ -159,12 +183,12 @@ async function* parallelGenerator<T>(max: number, source: Generator<Promise<T>, 
   }
   let filteredTasks = tasksAndNull.filter((v) => v !== null);
   while (filteredTasks.length > 0) {
-    const [i, v] = await Promise.race(filteredTasks);
+    const [ i, v ] = await Promise.race(filteredTasks);
     tasksAndNull[i] = null;
     if (!v.done) {
       yield v.value;
     }
-    filteredTasks = tasksAndNull.filter((v) => v !== null);
+    filteredTasks = tasksAndNull.filter((t) => t !== null);
   }
 }
 
@@ -172,7 +196,6 @@ async function* parallelGenerator<T>(max: number, source: Generator<Promise<T>, 
  * Make objects representing all the redirects.
  */
 const makeRedirectObjects = async (buildPath: string, bucket: string, prefix: string, parallel: number, redirects: Redirect[]): Promise<void> => {
-  let successCount = 0;
   let errorCount = 0;
   // Group redirects by location to handle multiple redirects for the same location
   const redirectsByLocation: Map<string, Redirect[]> = new Map();
@@ -196,8 +219,6 @@ const makeRedirectObjects = async (buildPath: string, bucket: string, prefix: st
     if (error) {
       errorCount++;
       core.error(`Error ${copied ? 'Updating' : 'Creating'} S3 object ${prefix}/${subPath}: ${error.message}`);
-    } else {
-      successCount++;
     }
   }
   core.info(`Finished with ${errorCount} error(s)`);
@@ -215,7 +236,7 @@ const main = async (): Promise<void> => {
 
   const redirects: Redirect[] = await (async () => {
     if (redirectsSource.startsWith('https://')) {
-    const response = await fetch(redirectsSource);
+      const response = await fetch(redirectsSource);
       if (!response.ok) {
         throw new Error('Unable to fetch ' + redirectsSource);
       }
@@ -225,8 +246,8 @@ const main = async (): Promise<void> => {
     }
   })();
   if (!(Array.isArray(redirects) && redirects.every((v) => (
-    typeof v === 'object' && typeof v.location === 'string' && 
-    typeof v.redirect === 'string' && 
+    typeof v === 'object' && typeof v.location === 'string' &&
+    typeof v.redirect === 'string' &&
     (typeof v.pattern === 'undefined' || typeof v.pattern === 'string')
   )))) {
     throw new Error(`Invalid redirects data`);
@@ -234,7 +255,7 @@ const main = async (): Promise<void> => {
 
   const bucket = core.getInput('bucket');
   core.debug(`Got input bucket "${bucket}"`);
-  if (!/^[a-z0-9][a-z0-9\.-]{1,61}[a-z0-9]$/.test(bucket) ||
+  if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(bucket) ||
     /\.\./.test(bucket) || /^\d+\.\d+\.\d+\.\d+$/.test(bucket) ||
     /^xn--/.test(bucket) || /^sthree-/.test(bucket) || /^amzn-s3-demo-/.test(bucket) ||
     /-s3alias$/.test(bucket) || /--ol-s3$/.test(bucket) || /\.mrap$/.test(bucket) ||
@@ -244,7 +265,7 @@ const main = async (): Promise<void> => {
 
   const prefix = core.getInput('prefix');
   core.debug(`Got input prefix "${prefix}"`);
-  if (!/^[a-z0-9\.-]+(\/[a-z0-9\.-]+)*$/.test(prefix)) {
+  if (!/^[a-z0-9.-]+(\/[a-z0-9.-]+)*$/.test(prefix)) {
     throw new Error(`Invalid prefix, got ${prefix}`);
   }
 
@@ -268,7 +289,8 @@ export const run = async () => {
     if (typeof err === 'string' || err instanceof Error) {
       core.setFailed(err);
     } else {
-      core.setFailed(err !== undefined ? String(err) : 'unknown error')
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      core.setFailed(err !== undefined ? String(err) : 'unknown error');
     }
   }
 };
