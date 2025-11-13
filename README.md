@@ -12,7 +12,7 @@ a customized envoy proxy.
 
 ### `redirects`
 
-**Required** The path to the redirects JSON file.
+**Required** The path or HTTPS URL to the redirects JSON file.
 
 ### `bucket`
 
@@ -37,6 +37,17 @@ uses: tinymce/tinymce-docs-generate-redirects-action@v1.0
 with:
   build: ./build/
   redirects: ./redirects.json
+  bucket: tiny-cloud-antora-docs-preview
+  prefix: ${{env.PR}}/${{env.RUN}}
+  parallel: 10
+```
+
+Redirects can also be a URL so you can reference another branch, for example:
+```yaml
+uses: tinymce/tinymce-docs-generate-redirects-action@v1.0
+with:
+  build: ./build/
+  redirects: https://raw.githubusercontent.com/tinymce/tinymce-docs/refs/heads/main/redirects.json
   bucket: tiny-cloud-antora-docs-preview
   prefix: ${{env.PR}}/${{env.RUN}}
   parallel: 10
