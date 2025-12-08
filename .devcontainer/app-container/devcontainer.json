@@ -5,8 +5,11 @@
 	"dockerComposeFile": ["../docker-compose.yml"],
   "service": "app",
   "shutdownAction": "stopCompose",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspaces/tinymce-docs-generate-redirects-action",
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true
+    },
     "ghcr.io/devcontainers/features/aws-cli:1.1.2": {}
   },
   "remoteUser": "node",

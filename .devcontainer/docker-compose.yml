@@ -6,7 +6,7 @@ services:
     command:
       tail -f /dev/null
     volumes:
-      - ..:/workspace:cached
+      - ..:/workspaces/tinymce-docs-generate-redirects-action:cached
     links:
       - s3
     depends_on:
