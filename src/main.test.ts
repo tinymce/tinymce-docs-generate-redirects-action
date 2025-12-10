@@ -68,7 +68,7 @@ const syncBucket = async (bucket: string, prefix: string, source: string) => {
 };
 
 const runAction = async () => {
-  const result = await spawnAsync([ 'npx', '@github/local-action', '/workspace', 'src/main.ts', 'test-data/.env' ]);
+  const result = await spawnAsync([ 'npx', '@github/local-action', '/workspaces/tinymce-docs-generate-redirects-action', 'src/main.ts', 'test-data/.env' ]);
   if (result.error !== undefined) {
     throw result.error;
   }
