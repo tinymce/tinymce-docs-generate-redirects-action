@@ -20,8 +20,8 @@ services:
   s3:
     image: minio/minio:latest
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000"
+      - "9001"
     volumes:
       - minio-data:/data
       - minio-config:/root/.minio
