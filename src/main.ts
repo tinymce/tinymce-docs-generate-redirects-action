@@ -7,6 +7,7 @@ import {
   CopyObjectCommand,
   S3Client,
   S3ServiceException,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { isRedirect, isValidGeneralPurposeBucketName, isValidPrefix, Redirect } from './validation.js';
 import { isReadableDirectory, loadJSON } from './io.js';
@@ -37,16 +38,23 @@ const copyS3ObjectWithMetadataAsync = async (
 ): Promise<S3Operation> => {
   const copied = true;
   const fullPath = `${prefix}/${subPath}`;
-  const command = new CopyObjectCommand({
-    Bucket: bucket,
-    CopySource: `${bucket}/${fullPath}`,
-    Key: fullPath,
-    MetadataDirective: 'REPLACE',
-    ContentType: 'text/html',
-    Metadata: metadata
-  });
   try {
-    await client.send(command);
+    const data = await client.send(new HeadObjectCommand({
+      Bucket: bucket,
+      Key: fullPath,
+    }));
+    await client.send(new CopyObjectCommand({
+      CopySource: `${bucket}/${fullPath}`,
+      Bucket: bucket,
+      Key: fullPath,
+      MetadataDirective: 'REPLACE',
+      ContentType: data.ContentType,
+      CacheControl: data.CacheControl,
+      Metadata: {
+        ...(data.Metadata ?? {}),
+        ...metadata,
+      },
+    }));
     return { copied, subPath };
   } catch (error) {
     if (error instanceof S3ServiceException) {
@@ -74,7 +82,8 @@ const createNewS3ObjectAsync = async (
     Key: fullPath,
     Body: '<!doctype html><title>?</title>',
     ContentType: 'text/html',
-    Metadata: { ...metadata, 'redirect-failure': 'not-found' }
+    Metadata: { ...metadata, 'redirect-failure': 'not-found' },
+    CacheControl: 'max-age=0, stale-while-revalidate=86400'
   });
   try {
     await client.send(command);
