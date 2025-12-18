@@ -49,7 +49,7 @@ const copyS3ObjectWithMetadataAsync = async (
       Key: fullPath,
       MetadataDirective: 'REPLACE',
       ContentType: data.ContentType,
-      CacheControl: data.CacheControl,
+      CacheControl: data.CacheControl ?? 'max-age=0, stale-while-revalidate=86400',
       Metadata: {
         ...(data.Metadata ?? {}),
         ...metadata,
