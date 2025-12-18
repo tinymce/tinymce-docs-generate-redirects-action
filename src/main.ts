@@ -50,6 +50,9 @@ const copyS3ObjectWithMetadataAsync = async (
       MetadataDirective: 'REPLACE',
       ContentType: data.ContentType,
       CacheControl: data.CacheControl ?? 'max-age=0, stale-while-revalidate=86400',
+      ContentEncoding: data.ContentEncoding,
+      ContentDisposition: data.ContentDisposition,
+      ContentLanguage: data.ContentLanguage,
       Metadata: {
         ...(data.Metadata ?? {}),
         ...metadata,
