@@ -29501,10 +29501,64 @@ const parseRfc3339DateTimeWithOffset = (value) => {
     }
     return date;
 };
+const IMF_FIXDATE = new RegExp(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), (\d{2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4}) (\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))? GMT$/);
+const RFC_850_DATE = new RegExp(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), (\d{2})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2}) (\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))? GMT$/);
+const ASC_TIME = new RegExp(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ( [1-9]|\d{2}) (\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))? (\d{4})$/);
+const parseRfc7231DateTime = (value) => {
+    if (value === null || value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string") {
+        throw new TypeError("RFC-7231 date-times must be expressed as strings");
+    }
+    let match = IMF_FIXDATE.exec(value);
+    if (match) {
+        const [_, dayStr, monthStr, yearStr, hours, minutes, seconds, fractionalMilliseconds] = match;
+        return buildDate(strictParseShort(stripLeadingZeroes(yearStr)), parseMonthByShortName(monthStr), parseDateValue(dayStr, "day", 1, 31), { hours, minutes, seconds, fractionalMilliseconds });
+    }
+    match = RFC_850_DATE.exec(value);
+    if (match) {
+        const [_, dayStr, monthStr, yearStr, hours, minutes, seconds, fractionalMilliseconds] = match;
+        return adjustRfc850Year(buildDate(parseTwoDigitYear(yearStr), parseMonthByShortName(monthStr), parseDateValue(dayStr, "day", 1, 31), {
+            hours,
+            minutes,
+            seconds,
+            fractionalMilliseconds,
+        }));
+    }
+    match = ASC_TIME.exec(value);
+    if (match) {
+        const [_, monthStr, dayStr, hours, minutes, seconds, fractionalMilliseconds, yearStr] = match;
+        return buildDate(strictParseShort(stripLeadingZeroes(yearStr)), parseMonthByShortName(monthStr), parseDateValue(dayStr.trimLeft(), "day", 1, 31), { hours, minutes, seconds, fractionalMilliseconds });
+    }
+    throw new TypeError("Invalid RFC-7231 date-time value");
+};
 const buildDate = (year, month, day, time) => {
     const adjustedMonth = month - 1;
     validateDayOfMonth(year, adjustedMonth, day);
     return new Date(Date.UTC(year, adjustedMonth, day, parseDateValue(time.hours, "hour", 0, 23), parseDateValue(time.minutes, "minute", 0, 59), parseDateValue(time.seconds, "seconds", 0, 60), parseMilliseconds(time.fractionalMilliseconds)));
+};
+const parseTwoDigitYear = (value) => {
+    const thisYear = new Date().getUTCFullYear();
+    const valueInThisCentury = Math.floor(thisYear / 100) * 100 + strictParseShort(stripLeadingZeroes(value));
+    if (valueInThisCentury < thisYear) {
+        return valueInThisCentury + 100;
+    }
+    return valueInThisCentury;
+};
+const FIFTY_YEARS_IN_MILLIS = 50 * 365 * 24 * 60 * 60 * 1000;
+const adjustRfc850Year = (input) => {
+    if (input.getTime() - new Date().getTime() > FIFTY_YEARS_IN_MILLIS) {
+        return new Date(Date.UTC(input.getUTCFullYear() - 100, input.getUTCMonth(), input.getUTCDate(), input.getUTCHours(), input.getUTCMinutes(), input.getUTCSeconds(), input.getUTCMilliseconds()));
+    }
+    return input;
+};
+const parseMonthByShortName = (value) => {
+    const monthIdx = MONTHS.indexOf(value);
+    if (monthIdx < 0) {
+        throw new TypeError(`Invalid month: ${value}`);
+    }
+    return monthIdx + 1;
 };
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const validateDayOfMonth = (year, month, day) => {
@@ -34122,6 +34176,38 @@ const getRegionRedirectMiddlewarePlugin = (clientConfig) => ({
     },
 });
 
+const s3ExpiresMiddleware = (config) => {
+    return (next, context) => async (args) => {
+        const result = await next(args);
+        const { response } = result;
+        if (HttpResponse.isInstance(response)) {
+            if (response.headers.expires) {
+                response.headers.expiresstring = response.headers.expires;
+                try {
+                    parseRfc7231DateTime(response.headers.expires);
+                }
+                catch (e) {
+                    context.logger?.warn(`AWS SDK Warning for ${context.clientName}::${context.commandName} response parsing (${response.headers.expires}): ${e}`);
+                    delete response.headers.expires;
+                }
+            }
+        }
+        return result;
+    };
+};
+const s3ExpiresMiddlewareOptions = {
+    tags: ["S3"],
+    name: "s3ExpiresMiddleware",
+    override: true,
+    relation: "after",
+    toMiddleware: "deserializerMiddleware",
+};
+const getS3ExpiresMiddlewarePlugin = (clientConfig) => ({
+    applyToStack: (clientStack) => {
+        clientStack.addRelativeTo(s3ExpiresMiddleware(), s3ExpiresMiddlewareOptions);
+    },
+});
+
 class S3ExpressIdentityCache {
     data;
     lastPurgeTime = Date.now();
@@ -37069,6 +37155,14 @@ const CreateSessionRequestFilterSensitiveLog = (obj) => ({
     ...(obj.SSEKMSKeyId && { SSEKMSKeyId: SENSITIVE_STRING }),
     ...(obj.SSEKMSEncryptionContext && { SSEKMSEncryptionContext: SENSITIVE_STRING }),
 });
+const HeadObjectOutputFilterSensitiveLog = (obj) => ({
+    ...obj,
+    ...(obj.SSEKMSKeyId && { SSEKMSKeyId: SENSITIVE_STRING }),
+});
+const HeadObjectRequestFilterSensitiveLog = (obj) => ({
+    ...obj,
+    ...(obj.SSECustomerKey && { SSECustomerKey: SENSITIVE_STRING }),
+});
 
 class EncryptionTypeMismatch extends S3ServiceException {
     name = "EncryptionTypeMismatch";
@@ -37247,6 +37341,38 @@ const se_CreateSessionCommand = async (input, context) => {
     b.m("GET").h(headers).q(query).b(body);
     return b.build();
 };
+const se_HeadObjectCommand = async (input, context) => {
+    const b = requestBuilder(input, context);
+    const headers = map({}, isSerializableHeaderValue, {
+        [_im]: input[_IM],
+        [_ims]: [() => isSerializableHeaderValue(input[_IMSf]), () => dateToUtcString(input[_IMSf]).toString()],
+        [_inm]: input[_INM],
+        [_ius]: [() => isSerializableHeaderValue(input[_IUS]), () => dateToUtcString(input[_IUS]).toString()],
+        [_ra]: input[_R],
+        [_xasseca]: input[_SSECA],
+        [_xasseck]: input[_SSECK],
+        [_xasseckm]: input[_SSECKMD],
+        [_xarp]: input[_RP],
+        [_xaebo]: input[_EBO],
+        [_xacm]: input[_CM],
+    });
+    b.bp("/{Key+}");
+    b.p("Bucket", () => input.Bucket, "{Bucket}", false);
+    b.p("Key", () => input.Key, "{Key+}", true);
+    const query = map({
+        [_rcc]: [, input[_RCC]],
+        [_rcd]: [, input[_RCD]],
+        [_rce]: [, input[_RCE]],
+        [_rcl]: [, input[_RCL]],
+        [_rct]: [, input[_RCT]],
+        [_re]: [() => input.ResponseExpires !== void 0, () => dateToUtcString(input[_RE]).toString()],
+        [_vI]: [, input[_VI]],
+        [_pN]: [() => input.PartNumber !== void 0, () => input[_PN].toString()],
+    });
+    let body;
+    b.m("HEAD").h(headers).q(query).b(body);
+    return b.build();
+};
 const se_PutObjectCommand = async (input, context) => {
     const b = requestBuilder(input, context);
     const headers = map({}, isSerializableHeaderValue, {
@@ -37344,6 +37470,66 @@ const de_CreateSessionCommand = async (output, context) => {
     if (data[_C$1] != null) {
         contents[_C$1] = de_SessionCredentials(data[_C$1]);
     }
+    return contents;
+};
+const de_HeadObjectCommand = async (output, context) => {
+    if (output.statusCode !== 200 && output.statusCode >= 300) {
+        return de_CommandError$3(output, context);
+    }
+    const contents = map({
+        $metadata: deserializeMetadata$3(output),
+        [_DM]: [() => void 0 !== output.headers[_xadm], () => parseBoolean(output.headers[_xadm])],
+        [_AR$1]: [, output.headers[_ar]],
+        [_Exp]: [, output.headers[_xae]],
+        [_Re]: [, output.headers[_xar]],
+        [_AS]: [, output.headers[_xaas]],
+        [_LM]: [() => void 0 !== output.headers[_lm], () => expectNonNull(parseRfc7231DateTime(output.headers[_lm]))],
+        [_CLo]: [() => void 0 !== output.headers[_cl_], () => strictParseLong(output.headers[_cl_])],
+        [_CCRC]: [, output.headers[_xacc]],
+        [_CCRCC]: [, output.headers[_xacc_]],
+        [_CCRCNVME]: [, output.headers[_xacc__]],
+        [_CSHA]: [, output.headers[_xacs]],
+        [_CSHAh]: [, output.headers[_xacs_]],
+        [_CT]: [, output.headers[_xact]],
+        [_ETa]: [, output.headers[_eta]],
+        [_MM]: [() => void 0 !== output.headers[_xamm], () => strictParseInt32(output.headers[_xamm])],
+        [_VI]: [, output.headers[_xavi]],
+        [_CC]: [, output.headers[_cc]],
+        [_CD]: [, output.headers[_cd]],
+        [_CE]: [, output.headers[_ce]],
+        [_CL]: [, output.headers[_cl]],
+        [_CTo]: [, output.headers[_ct]],
+        [_CR]: [, output.headers[_cr]],
+        [_E$1]: [() => void 0 !== output.headers[_e], () => expectNonNull(parseRfc7231DateTime(output.headers[_e]))],
+        [_ES]: [, output.headers[_ex]],
+        [_WRL]: [, output.headers[_xawrl]],
+        [_SSE]: [, output.headers[_xasse]],
+        [_SSECA]: [, output.headers[_xasseca]],
+        [_SSECKMD]: [, output.headers[_xasseckm]],
+        [_SSEKMSKI]: [, output.headers[_xasseakki]],
+        [_BKE]: [() => void 0 !== output.headers[_xassebke], () => parseBoolean(output.headers[_xassebke])],
+        [_SC]: [, output.headers[_xasc]],
+        [_RC]: [, output.headers[_xarc]],
+        [_RSe]: [, output.headers[_xars_]],
+        [_PC$1]: [() => void 0 !== output.headers[_xampc], () => strictParseInt32(output.headers[_xampc])],
+        [_TC$1]: [() => void 0 !== output.headers[_xatc], () => strictParseInt32(output.headers[_xatc])],
+        [_OLM]: [, output.headers[_xaolm]],
+        [_OLRUD]: [
+            () => void 0 !== output.headers[_xaolrud],
+            () => expectNonNull(parseRfc3339DateTimeWithOffset(output.headers[_xaolrud])),
+        ],
+        [_OLLHS]: [, output.headers[_xaollh]],
+        Metadata: [
+            ,
+            Object.keys(output.headers)
+                .filter((header) => header.startsWith("x-amz-meta-"))
+                .reduce((acc, header) => {
+                acc[header.substring(11)] = output.headers[header];
+                return acc;
+            }, {}),
+        ],
+    });
+    await collectBody$1(output.body, context);
     return contents;
 };
 const de_PutObjectCommand = async (output, context) => {
@@ -37616,6 +37802,8 @@ const deserializeMetadata$3 = (output) => ({
 });
 const _ACL = "ACL";
 const _AKI$1 = "AccessKeyId";
+const _AR$1 = "AcceptRanges";
+const _AS = "ArchiveStatus";
 const _AT = "AccessTier";
 const _BKE = "BucketKeyEnabled";
 const _C$1 = "Credentials";
@@ -37628,7 +37816,9 @@ const _CD = "ContentDisposition";
 const _CE = "ContentEncoding";
 const _CL = "ContentLanguage";
 const _CLo = "ContentLength";
+const _CM = "ChecksumMode";
 const _CMD = "ContentMD5";
+const _CR = "ContentRange";
 const _CS = "CopySource";
 const _CSHA = "ChecksumSHA1";
 const _CSHAh = "ChecksumSHA256";
@@ -37642,8 +37832,10 @@ const _CSSSECKMD = "CopySourceSSECustomerKeyMD5";
 const _CSVI = "CopySourceVersionId";
 const _CT = "ChecksumType";
 const _CTo = "ContentType";
+const _DM = "DeleteMarker";
 const _E$1 = "Expires";
 const _EBO = "ExpectedBucketOwner";
+const _ES = "ExpiresString";
 const _ESBO = "ExpectedSourceBucketOwner";
 const _ETa = "ETag";
 const _Exp = "Expiration";
@@ -37652,14 +37844,28 @@ const _GR = "GrantRead";
 const _GRACP = "GrantReadACP";
 const _GWACP = "GrantWriteACP";
 const _IM = "IfMatch";
+const _IMSf = "IfModifiedSince";
 const _INM = "IfNoneMatch";
+const _IUS = "IfUnmodifiedSince";
 const _LM = "LastModified";
 const _MD = "MetadataDirective";
+const _MM = "MissingMeta";
 const _OLLHS = "ObjectLockLegalHoldStatus";
 const _OLM = "ObjectLockMode";
 const _OLRUD = "ObjectLockRetainUntilDate";
+const _PC$1 = "PartsCount";
+const _PN = "PartNumber";
+const _R = "Range";
 const _RC = "RequestCharged";
+const _RCC = "ResponseCacheControl";
+const _RCD = "ResponseContentDisposition";
+const _RCE = "ResponseContentEncoding";
+const _RCL = "ResponseContentLanguage";
+const _RCT = "ResponseContentType";
+const _RE = "ResponseExpires";
 const _RP = "RequestPayer";
+const _RSe = "ReplicationStatus";
+const _Re = "Restore";
 const _SAK$1 = "SecretAccessKey";
 const _SC = "StorageClass";
 const _SM = "SessionMode";
@@ -37672,27 +37878,45 @@ const _SSEKMSKI = "SSEKMSKeyId";
 const _ST$1 = "SessionToken";
 const _Si = "Size";
 const _T$1 = "Tagging";
+const _TC$1 = "TagCount";
 const _TD = "TaggingDirective";
 const _VI = "VersionId";
 const _WOB = "WriteOffsetBytes";
 const _WRL = "WebsiteRedirectLocation";
+const _ar = "accept-ranges";
 const _cc = "cache-control";
 const _cd = "content-disposition";
 const _ce = "content-encoding";
 const _cl = "content-language";
 const _cl_ = "content-length";
 const _cm = "content-md5";
+const _cr = "content-range";
 const _ct = "content-type";
 const _e = "expires";
 const _eta = "etag";
+const _ex = "expiresstring";
 const _im = "if-match";
+const _ims = "if-modified-since";
 const _inm = "if-none-match";
+const _ius = "if-unmodified-since";
+const _lm = "last-modified";
+const _pN = "partNumber";
+const _ra = "range";
+const _rcc = "response-cache-control";
+const _rcd = "response-content-disposition";
+const _rce = "response-content-encoding";
+const _rcl = "response-content-language";
+const _rct = "response-content-type";
+const _re = "response-expires";
 const _s = "session";
+const _vI = "versionId";
 const _xaa = "x-amz-acl";
+const _xaas = "x-amz-archive-status";
 const _xaca = "x-amz-checksum-algorithm";
 const _xacc = "x-amz-checksum-crc32";
 const _xacc_ = "x-amz-checksum-crc32c";
 const _xacc__ = "x-amz-checksum-crc64nvme";
+const _xacm = "x-amz-checksum-mode";
 const _xacs = "x-amz-checksum-sha1";
 const _xacs_ = "x-amz-checksum-sha256";
 const _xacs__ = "x-amz-copy-source";
@@ -37706,6 +37930,7 @@ const _xacssseck = "x-amz-copy-source-server-side-encryption-customer-key";
 const _xacssseckm = "x-amz-copy-source-server-side-encryption-customer-key-md5";
 const _xacsvi = "x-amz-copy-source-version-id";
 const _xact = "x-amz-checksum-type";
+const _xadm = "x-amz-delete-marker";
 const _xae = "x-amz-expiration";
 const _xaebo = "x-amz-expected-bucket-owner";
 const _xagfc = "x-amz-grant-full-control";
@@ -37713,12 +37938,16 @@ const _xagr = "x-amz-grant-read";
 const _xagra = "x-amz-grant-read-acp";
 const _xagwa = "x-amz-grant-write-acp";
 const _xamd = "x-amz-metadata-directive";
+const _xamm = "x-amz-missing-meta";
+const _xampc = "x-amz-mp-parts-count";
 const _xaollh = "x-amz-object-lock-legal-hold";
 const _xaolm = "x-amz-object-lock-mode";
 const _xaolrud = "x-amz-object-lock-retain-until-date";
 const _xaos = "x-amz-object-size";
+const _xar = "x-amz-restore";
 const _xarc = "x-amz-request-charged";
 const _xarp = "x-amz-request-payer";
+const _xars_ = "x-amz-replication-status";
 const _xasc = "x-amz-storage-class";
 const _xasca = "x-amz-sdk-checksum-algorithm";
 const _xasebo = "x-amz-source-expected-bucket-owner";
@@ -37730,6 +37959,7 @@ const _xasseca = "x-amz-server-side-encryption-customer-algorithm";
 const _xasseck = "x-amz-server-side-encryption-customer-key";
 const _xasseckm = "x-amz-server-side-encryption-customer-key-md5";
 const _xat = "x-amz-tagging";
+const _xatc = "x-amz-tagging-count";
 const _xatd = "x-amz-tagging-directive";
 const _xavi = "x-amz-version-id";
 const _xawob = "x-amz-write-offset-bytes";
@@ -39001,6 +39231,30 @@ class CopyObjectCommand extends Command
     .build() {
 }
 
+class HeadObjectCommand extends Command
+    .classBuilder()
+    .ep({
+    ...commonParams$3,
+    Bucket: { type: "contextParams", name: "Bucket" },
+    Key: { type: "contextParams", name: "Key" },
+})
+    .m(function (Command, cs, config, o) {
+    return [
+        getSerdePlugin(config, this.serialize, this.deserialize),
+        getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
+        getThrow200ExceptionsPlugin(config),
+        getSsecPlugin(config),
+        getS3ExpiresMiddlewarePlugin(),
+    ];
+})
+    .s("AmazonS3", "HeadObject", {})
+    .n("S3Client", "HeadObjectCommand")
+    .f(HeadObjectRequestFilterSensitiveLog, HeadObjectOutputFilterSensitiveLog)
+    .ser(se_HeadObjectCommand)
+    .de(de_HeadObjectCommand)
+    .build() {
+}
+
 class PutObjectCommand extends Command
     .classBuilder()
     .ep({
@@ -39115,16 +39369,26 @@ const checkS3ObjectExpectedToExist = async (buildPath, subPath) => {
 const copyS3ObjectWithMetadataAsync = async (client, bucket, prefix, subPath, metadata) => {
     const copied = true;
     const fullPath = `${prefix}/${subPath}`;
-    const command = new CopyObjectCommand({
-        Bucket: bucket,
-        CopySource: `${bucket}/${fullPath}`,
-        Key: fullPath,
-        MetadataDirective: 'REPLACE',
-        ContentType: 'text/html',
-        Metadata: metadata
-    });
     try {
-        await client.send(command);
+        const data = await client.send(new HeadObjectCommand({
+            Bucket: bucket,
+            Key: fullPath,
+        }));
+        await client.send(new CopyObjectCommand({
+            CopySource: `${bucket}/${fullPath}`,
+            Bucket: bucket,
+            Key: fullPath,
+            MetadataDirective: 'REPLACE',
+            ContentType: data.ContentType,
+            CacheControl: data.CacheControl ?? 'max-age=0, stale-while-revalidate=86400',
+            ContentEncoding: data.ContentEncoding,
+            ContentDisposition: data.ContentDisposition,
+            ContentLanguage: data.ContentLanguage,
+            Metadata: {
+                ...(data.Metadata ?? {}),
+                ...metadata,
+            },
+        }));
         return { copied, subPath };
     }
     catch (error) {
@@ -39147,7 +39411,8 @@ const createNewS3ObjectAsync = async (client, bucket, prefix, subPath, metadata)
         Key: fullPath,
         Body: '<!doctype html><title>?</title>',
         ContentType: 'text/html',
-        Metadata: { ...metadata, 'redirect-failure': 'not-found' }
+        Metadata: { ...metadata, 'redirect-failure': 'not-found' },
+        CacheControl: 'max-age=0, stale-while-revalidate=86400'
     });
     try {
         await client.send(command);
